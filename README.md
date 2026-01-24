@@ -12,7 +12,7 @@ Includes code and CAD models with documentation.
 >> Mechanical Engineer
 > - Torin Stanton-Andersson
 >>Digital Systems Engineer  
->>Electronic and Wiring Eng
+>>Electronic and Wiring Engineer
 > - David Mariani
 > - Aidan Johnstone
 > - Lucy Grierson
@@ -20,5 +20,6 @@ Includes code and CAD models with documentation.
 
 ## Naming Convention For Files  
 
-***name-name-group2.c***     // Lowercase and hyphen with group2 at end.
+Lowercase and hyphen with group2 at end:  
+***name-name-group2.c*** // Example of c file
 
