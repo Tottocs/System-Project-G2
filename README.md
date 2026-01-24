@@ -1,6 +1,6 @@
 # Description
 
-![Logo](./documentation/logo/high-resolution-logo-group2.png)
+![Logo](./documentation/logo/low-resolution-logo-group2.png)
 
 Recycling robot that collects rubbish and places it in designated areas.  
 Includes code and CAD models with documentation.
