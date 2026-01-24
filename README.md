@@ -1,16 +1,18 @@
 # Description
 
+![Logo] (/documentation/logo/high-resolution-logo-group2.png)
+
 Recycling robot that collects rubbish and places it in designated areas.  
 Includes code and CAD models with documentation.
 
 ## The Team
 
 > - Abdalrahman Al-Zandi
->> Managing Director 
+>> Managing Director  
 >> Mechanical Engineer
 > - Torin Stanton-Andersson
 >>Digital Systems Engineer  
->>Electronic and Wiring Engineer
+>>Electronic and Wiring Eng
 > - David Mariani
 > - Aidan Johnstone
 > - Lucy Grierson
