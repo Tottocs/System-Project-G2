@@ -14,12 +14,18 @@ Includes code and CAD models with documentation.
 >>Digital Systems Engineer  
 >>Electronic and Wiring Engineer
 > - David Mariani
+>> Workshop Engineer  
 > - Aidan Johnstone
+>>Software Engineer  
+>>Personal Relations  
 > - Lucy Grierson
 > - Ben Albeson
+>> Web Designer
 
 ## Naming Convention For Files  
 
 Lowercase and hyphen with group2 at end:  
 ***name-name-group2.c*** // Example of c file
 
+Exception is when document is not created by the team.  
+Then group2 is on used.
