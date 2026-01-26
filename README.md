@@ -14,13 +14,17 @@ Includes code and CAD models with documentation.
 >>Digital Systems Engineer  
 >>Electronic and Wiring Engineer
 > - David Mariani
->> Workshop Engineer  
+>>Workshop Engineer  
+>>Electronics and Wiring Engineer  
 > - Aidan Johnstone
 >>Software Engineer  
 >>Personal Relations  
 > - Lucy Grierson
+>>Company Secretary  
+>>Software Engineer  
 > - Ben Albeson
->> Web Designer
+>>Web Designer  
+>>Digital Systems Engineer  
 
 ## Naming Convention For Files  
 
