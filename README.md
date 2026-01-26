@@ -28,4 +28,4 @@ Lowercase and hyphen with group2 at end:
 ***name-name-group2.c*** // Example of c file
 
 Exception is when document is not created by the team.  
-Then group2 is on used.
+Then group2 is not used.
