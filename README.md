@@ -8,19 +8,23 @@ Includes code and CAD models with documentation.
 ## The Team
 
 > - Abdalrahman Al-Zandi
->> Managing Director  
->> Mechanical Engineer
+>>Managing Director  
+>>Mechanical Engineer
 > - Torin Stanton-Andersson
 >>Digital Systems Engineer  
 >>Electronic and Wiring Engineer
 > - David Mariani
->> Workshop Engineer  
+>>Workshop Engineer  
+>>Electronics and Wiring Engineer  
 > - Aidan Johnstone
 >>Software Engineer  
 >>Personal Relations  
 > - Lucy Grierson
+>>Company Secretary  
+>>Software Engineer  
 > - Ben Albeson
->> Web Designer
+>>Web Designer  
+>>Digital Systems Engineer  
 
 ## Naming Convention For Files  
 
