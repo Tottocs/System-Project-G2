@@ -1,0 +1,58 @@
+Meeting Minutes Week 2 19.1.26
+
+Group Name: Recyclotronics
+Team Number: 2
+
+Week: 1
+
+Time: 1000-1215
+
+Place: GRID
+
+Present: David, Torin, Aidan, Ben, Lucy, Abdal
+
+Apologies: None
+
+Agenda: No review of previous discussion needed. 
+        Decide on a team name. 
+        Decide on roles. 
+        Plan outline of project
+
+Review of previous actions: Not applicable.
+
+Main business: Setting out plan of action for foreseeable future. Action: Discussion and brainstorming.
+
+Upon discussion of company name and model, preliminary company name “Recyclotronics” model name undecided. 
+
+Roles were decided based on individual strengths and passions. 
+
+Gripping mechanism discussed. 
+    · Current driven tendril design suggested but concerns with time constraints and complexity were raised. Biomimicry was deemed convoluted. 
+    · Crane was also mentioned but concerns surrounding efficiency, electromagnetic crane discussed as an offshoot concept. 
+    · following on a pinching claw was developed. Storage of object. Picking up multiple was mentioned but software team have concerns regarding weight, size and sorting colour. One at a time 
+    
+Object 
+    · Five different colour/recycle options but only choose three 
+    · Shape and weight of box discussed with indents and hooks but team expressed desire for a more ambitious project involving a universally suitable shape, concerns about marketability also raised. 
+    · Different shapes respective to different recyclable materials discussed but team are concerned ambitions are becoming bloated. 
+
+Detection of Objects. 
+    Ultrasonic sensors on all sides of buggy continually detecting, once object is within specified range, reverse motors to measure distance. 
+    Pushing object also discussed but final verdict was reversing buggy. 
+    Colour used to decipher between object and obstacle. 
+    
+Line following 
+    · Memory system discussed but team worry this may be too complex 
+    · Gyroscope and position detectors in two places also mentioned 
+    · Double back once object grabbed to get onto line 
+    · Position sensor used to negate line following on path back. This is an efficient and time saving idea theoretically, however, lines are hypothetical roads and charging through a straight 
+    path not following roads is dangerous and destructive. 
+    Environment Starting place will double as charging hub One object at a time or multiple All dump bins at base 
+    
+Goals for next meeting (20.1.26 1000-1200): 
+· Discussion of sorting each box. 
+· How will sorting work for multiple object at once. 
+· Developing ideas for gripper. 
+· Risk assessment must be done before practical work commences. 
+· Sensor characterisation. 
+· Line following
