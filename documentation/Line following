@@ -1,0 +1,108 @@
+/*
+Line following control of two Bi-directional Motors
+*/
+
+//Pins
+#define MOT_A1_PIN 5
+#define MOT_A2_PIN 6
+#define MOT_B1_PIN 9
+#define MOT_B2_PIN 10
+
+//variables
+boolean reverseL = 0;
+boolean reverseR = 0;
+
+int leftServoSpeed = 0;
+int rightServoSpeed = 0;
+
+const int irPins[3] = {A5, A4, A3};
+int irSensorDigital[3] = {0, 0, 0};
+
+int threshold = 500;
+const int maxSpeed = 180;
+
+int irSensors = B000;
+int error = 0;
+int errorLast = 0;
+
+// setup
+void setup() {
+  pinMode(MOT_A1_PIN, OUTPUT);
+  pinMode(MOT_A2_PIN, OUTPUT);
+  pinMode(MOT_B1_PIN, OUTPUT);
+  pinMode(MOT_B2_PIN, OUTPUT);
+
+  digitalWrite(MOT_A1_PIN, LOW);
+  digitalWrite(MOT_A2_PIN, LOW);
+  digitalWrite(MOT_B1_PIN, LOW);
+  digitalWrite(MOT_B2_PIN, LOW);
+
+  Serial.begin(9600);
+}
+
+// motors
+void set_motor_pwm(int pwm, int IN1_PIN, int IN2_PIN) {
+  if (pwm < 0) {
+    analogWrite(IN1_PIN, -pwm);
+    digitalWrite(IN2_PIN, LOW);
+  } else {
+    digitalWrite(IN1_PIN, LOW);
+    analogWrite(IN2_PIN, pwm);
+  }
+}
+
+void set_motor_currents(int pwm_A, int pwm_B) {
+  set_motor_pwm(pwm_A, MOT_A1_PIN, MOT_A2_PIN);
+  set_motor_pwm(pwm_B, MOT_B1_PIN, MOT_B2_PIN);
+}
+
+void spin_and_wait(int pwm_A, int pwm_B, int duration) {
+  set_motor_currents(pwm_A, pwm_B);
+  delay(duration);
+}
+
+// sensors scanning
+void Scan() {
+  irSensors = B000;
+
+  for (int i = 0; i < 3; i++) {
+    int sensorValue = analogRead(irPins[i]);
+    irSensorDigital[i] = (sensorValue >= threshold) ? 1 : 0;
+
+    int b = 2 - i;
+    irSensors |= (irSensorDigital[i] << b);
+  }
+}
+
+// line following 
+void UpdateDirection() {
+  errorLast = error;
+
+  switch (irSensors) {
+    case B000:
+      error = (errorLast < 0) ? -130 : 130;
+      break;
+    case B100: error = -80; break;
+    case B110: error = -40; break;
+    case B010: error = 0;   break;
+    case B011: error = 40;  break;
+    case B001: error = 80;  break;
+    case B111: error = 1;   break;
+    default: error = errorLast;
+  }
+
+  if (error >= 0) {
+    leftServoSpeed = maxSpeed;
+    rightServoSpeed = maxSpeed - error;
+  } else {
+    leftServoSpeed = maxSpeed + error;
+    rightServoSpeed = maxSpeed;
+  }
+}
+
+// looping
+void loop() {
+  Scan();
+  UpdateDirection();
+  spin_and_wait(leftServoSpeed, rightServoSpeed, 8);
+}
