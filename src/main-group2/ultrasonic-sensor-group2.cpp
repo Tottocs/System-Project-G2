@@ -5,11 +5,11 @@ Author: Torin Stanton-Andersson
 Taken from a previous assignment by this author.
 
 The function, Get_Distance, uses the HCSR04 ultrasonic sensor to output a distance measurement.
-It outputs a integer of units in cm. 
+It outputs an unsigned long in units of cm. 
 
 To create an object of US_Sensor one must provide a trigger pin number.
 The function, Setup_Echo_Pin, requires an input pin number corresponding to the echo pin.
-After that, <object>.Get_Distance_CM() can be used to return the distance as an unsigned long in cm.
+After that, <object>.Get_Distance_CM() can be used to return the distance.
 */
 
 #include "include\ultrasonic-sensor-group2.h"
