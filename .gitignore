@@ -39,3 +39,7 @@
 
 # debug information files
 *.dwo
+
+# Inventor Backups
+*/OldVersions/**/*.iam
+*/OldVersions/**/*.ipt
