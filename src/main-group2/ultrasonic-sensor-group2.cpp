@@ -1,5 +1,6 @@
 #ifndef FIRMWARE_VERSION
 #define FIRMWARE_VERSION "v.1.0"
+#endif
 
 /* 
 Author: Torin Stanton-Andersson

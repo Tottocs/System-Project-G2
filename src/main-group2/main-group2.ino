@@ -1,5 +1,6 @@
 #ifndef FIRMWARE_VERSION
 #define FIRMWARE_VERSION "v.0.2" //Initial commit
+#endif
 
 /*
 [] Ultrasonic Sensor
@@ -8,10 +9,10 @@
 [] Servos (Which ones)
 [x] IR sensors
 [] Status LEDs
+[] Buzzer or sound
 
 Optional:
 [] Eyes
-[] Buzzer or sound
 
 */
 
@@ -35,14 +36,16 @@ Optional:
 #define PWM_SERVO_PIN 6 //Needs to be changed
 
 //MAX and MIN distances for detectable object (cm)
-#define MIN_DIST 15 //Needs to be changed
-#define MAX_DIST 195 //Needs to be changed
+#define MIN_DIST 1 //Needs to be changed
+#define MAX_DIST 20 //Needs to be changed
 
 //Motor pins
 #define MOT_A1_PIN 5
 #define MOT_A2_PIN 6
 #define MOT_B1_PIN 9
 #define MOT_B2_PIN 10
+
+#define BUTTON 8 // Change
 
 //Creating Servo objects
 Servo arm1; // Add servo names
@@ -55,7 +58,8 @@ US_Sensor us_sens1(TRIG_PIN_1);
 //Motor speed variables
 int LeftMotorSpeed = 0;
 int RightMotorSpeed = 0;
-int* LeftMotor, RightMotor;
+int* LeftMotor = &LeftMotorSpeed;
+int* RightMotor = &RightMotorSpeed;
 
 //US sensor variables
 unsigned long Distance;
@@ -68,17 +72,18 @@ void setup() {
   //Setup up ultrasonic sensor pins
   us_sens1.Setup_Echo_Pin(ECHO_PIN);
 
-  //Setup motor pins
-  pinMode(MOT_A1_PIN, OUTPUT);
-  pinMode(MOT_A2_PIN, OUTPUT);
-  pinMode(MOT_B1_PIN, OUTPUT);
-  pinMode(MOT_B2_PIN, OUTPUT);
+  //Setup main motor pins
+  Setup_Main_Motors(MOT_A1_PIN, MOT_A2_PIN, 
+                    MOT_B1_PIN, MOT_B2_PIN);
+
+  //Setup calibration
+  pinMode(BUTTON, INPUT);
 }
 
 void loop() {
   Distance = us_sens1.Get_Distance_CM();
 
-  Scan();
-  UpdateDirection();
-  spin_and_wait(leftServoSpeed, rightServoSpeed, 8);
+  IR_Sensor_Status = Scan();
+  Update_Direction(LeftMotor, RightMotor);
+  //Spin_And_Wait(leftServoSpeed, rightServoSpeed, 8);
 }
