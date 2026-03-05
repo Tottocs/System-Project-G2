@@ -1,0 +1,2 @@
+#ifndef MOTOR_GROUP2_H
+#define MOTOR_GROUP2_H
