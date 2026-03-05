@@ -1,11 +1,12 @@
-#define FIRMWARE_VERSION "v.0.1" //Initial commit
+#ifndef FIRMWARE_VERSION
+#define FIRMWARE_VERSION "v.0.2" //Initial commit
 
 /*
 [] Ultrasonic Sensor
 [] RGB Sensor
-[] Motors
+[x] Motors
 [] Servos (Which ones)
-[] IR sensors
+[x] IR sensors
 [] Status LEDs
 
 Optional:
@@ -14,7 +15,12 @@ Optional:
 
 */
 
-#include "include/ultrasonic-sensor-group2.h" //Including custom library
+//Including project libraries
+#include "include/ultrasonic-sensor-group2.h" 
+#include "include/ir-sensor-group2.h"
+#include "include/motor-group2.h"
+
+//Including online libraries 
 #include <Servo.h>
 
 //UART only needed for debugging and testing. Will slow the arduino computation
@@ -32,6 +38,12 @@ Optional:
 #define MIN_DIST 15 //Needs to be changed
 #define MAX_DIST 195 //Needs to be changed
 
+//Motor pins
+#define MOT_A1_PIN 5
+#define MOT_A2_PIN 6
+#define MOT_B1_PIN 9
+#define MOT_B2_PIN 10
+
 //Creating Servo objects
 Servo arm1; // Add servo names
 Servo arm2;
@@ -40,15 +52,33 @@ Servo scanner;
 
 US_Sensor us_sens1(TRIG_PIN_1);
 
-//Variables
+//Motor speed variables
+int LeftMotorSpeed = 0;
+int RightMotorSpeed = 0;
+int* LeftMotor, RightMotor;
+
+//US sensor variables
 unsigned long Distance;
+int IR_Sensor_Status = B000;
 
 void setup() {
-  //Seting up ultrasonic sensor pins
+  //setup serial
+  Serial.begin(UART_BAUDRATE);
+
+  //Setup up ultrasonic sensor pins
   us_sens1.Setup_Echo_Pin(ECHO_PIN);
+
+  //Setup motor pins
+  pinMode(MOT_A1_PIN, OUTPUT);
+  pinMode(MOT_A2_PIN, OUTPUT);
+  pinMode(MOT_B1_PIN, OUTPUT);
+  pinMode(MOT_B2_PIN, OUTPUT);
 }
 
 void loop() {
   Distance = us_sens1.Get_Distance_CM();
 
+  Scan();
+  UpdateDirection();
+  spin_and_wait(leftServoSpeed, rightServoSpeed, 8);
 }
