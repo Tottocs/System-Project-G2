@@ -25,7 +25,7 @@ Optional:
 #include <Servo.h>
 
 //UART only needed for debugging and testing. Will slow the arduino computation
-#define SERIAL_STATUS true // set false for field operation
+#define SERIAL_STATUS false // set false for field operation
 #define UART_BAUDRATE 9600 //might need to be changed
 
 //Pins on Arduino UNO 
@@ -46,13 +46,15 @@ Optional:
 //Peripheral 
 #define BUTTON 8 // Change
 
+int IR_Sensor_Pins[] = {A5,A4,A3};
+
 //MAX and MIN distances for detectable object (cm)
 #define MIN_DIST 1 //Needs to be changed
 #define MAX_DIST 20 //Needs to be changed
 
 #define REFRESH_RATE 10 //Refresh rate of entire programme in ms
 
-//Creating Servo objects
+//Creating objects
 Servo arm1; // Add servo names
 Servo arm2;
 Servo door;
@@ -66,6 +68,7 @@ int RightMotorSpeed = 0;
 
 //US sensor variables
 unsigned long Distance;
+//IR Sensor variable
 int IR_Sensor_Status = B000;
 
 void setup() {
@@ -76,6 +79,7 @@ void setup() {
 
   //Setup up ultrasonic sensor pins
   us_sens1.Setup_Echo_Pin(ECHO_PIN);
+  Setup_IR_Sensors(IR_Sensor_Pins);
 
   //Setup main motor pins
   Setup_Main_Motors(MOT_A1_PIN, MOT_A2_PIN, 
