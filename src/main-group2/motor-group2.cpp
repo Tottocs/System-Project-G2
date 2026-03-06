@@ -6,7 +6,7 @@
 #include "include/motor-group2.h"
 
 #define MAIN_MOTORS_STATUS true 
-#define SERIAL_STATUS true
+#define SERIAL_STATUS false
 
 int _MOT_A1_PIN;
 int _MOT_A2_PIN;
