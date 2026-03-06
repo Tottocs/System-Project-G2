@@ -10,11 +10,13 @@ Edited By: Torin Stanton-Andersson
 #include <Arduino.h>
 #include "include/ir-sensor-group2.h"
 
+#define SERIAL_STATUS false
+
 #ifndef N_SENSORS
 #define N_SENSORS 3 //DO NOT EDIT
 #endif
 
-#define MAX_SPD 180 //Editable
+#define MAX_SPD 150 //Editable default = 180
 #define BLACK_MARGIN_SHIFT 100
 #define CAL_TIMEOUT 10000
 
@@ -62,6 +64,7 @@ void Setup_IR_Sensors(int Arr[N_SENSORS]/*, int Button*/) { // {Left, Middle, Ri
 
 //sensor scanning
 int Scan() {
+  // Add checking for setup
   IR_Sensors = B000;
 
   for (int i = 0; i < N_SENSORS; i++) {
@@ -73,27 +76,28 @@ int Scan() {
   }
 
   // CANNOT USE SERIAL SEPARATE FROM INO FILE
-  /*
+  #if SERIAL_STATUS == true
   Serial.print("IR raw: L=");
-  Serial.print(irSensorRaw[0]);
+  Serial.print(IRSensorRaw[0]);
   Serial.print(" C=");
-  Serial.print(irSensorRaw[1]);
+  Serial.print(IRSensorRaw[1]);
   Serial.print(" R=");
-  Serial.print(irSensorRaw[2]);
+  Serial.print(IRSensorRaw[2]);
 
   Serial.print(" | dig: ");
-  Serial.print(irSensorDigital[0]);
+  Serial.print(IRSensorDigital[0]);
   Serial.print(" ");
-  Serial.print(irSensorDigital[1]);
+  Serial.print(IRSensorDigital[1]);
   Serial.print(" ");
-  Serial.print(irSensorDigital[2]);
+  Serial.print(IRSensorDigital[2]);
 
   Serial.print(" | bin=");
-  Serial.print IR_Sensors, BIN);
+  Serial.print(IR_Sensors, BIN);
 
   Serial.print(" | err=");
-  Serial.println(Error);
-  */
+  Serial.println(Error);  
+  #endif
+  
 
   return IR_Sensors;
 }
