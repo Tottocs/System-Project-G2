@@ -12,10 +12,14 @@ Edited By: Torin Stanton-Andersson
 
 #ifndef N_SENSORS
 #define N_SENSORS 3 //DO NOT EDIT
+#endif
 
 #define MAX_SPD 180 //Editable
 #define BLACK_MARGIN_SHIFT 100
 #define CAL_TIMEOUT 10000
+
+#define SMALL_CHANGE 40
+#define LARGE_CHANGE 80
 
 //sensors
 int IRPins[N_SENSORS];
@@ -58,14 +62,14 @@ void Setup_IR_Sensors(int Arr[N_SENSORS]/*, int Button*/) { // {Left, Middle, Ri
 
 //sensor scanning
 int Scan() {
-  IRSensors = B000;
+  IR_Sensors = B000;
 
   for (int i = 0; i < N_SENSORS; i++) {
     IRSensorRaw[i] = analogRead(IRPins[i]);
-    IRSensorDigital[i] = (IRSensorRaw[i] >= THRESHOLD) ? 1 : 0;
+    IRSensorDigital[i] = (IRSensorRaw[i] >= Threshold) ? 1 : 0;
 
     int b = (int)N_SENSORS - 1 - i;
-    IRSensors |= (IRSensorDigital[i] << b);
+    IR_Sensors |= (IRSensorDigital[i] << b);
   }
 
   // CANNOT USE SERIAL SEPARATE FROM INO FILE
@@ -85,21 +89,21 @@ int Scan() {
   Serial.print(irSensorDigital[2]);
 
   Serial.print(" | bin=");
-  Serial.print(IRSensors, BIN);
+  Serial.print IR_Sensors, BIN);
 
   Serial.print(" | err=");
   Serial.println(Error);
   */
 
-  return IRSensors;
+  return IR_Sensors;
 }
 
 //line following
-void Update_Direction(LeftMotor, RightMotor) {
+void Update_Direction(int* LeftMotorSpeed,int* RightMotorSpeed) {
   
   ErrorLast = Error;
 
-  switch (IRSensors) {
+  switch  (IR_Sensors) {
 
     case B000:  
       //off track
@@ -115,12 +119,12 @@ void Update_Direction(LeftMotor, RightMotor) {
       }
       return;
 
-    case B100: Error = -80; break; // 
-    case B110: Error = -40; break;
-    case B010: Error = 0;   break;
-    case B011: Error = 40;  break;
-    case B001: Error = 80;  break;
-    case B111: Error = 1;   break;
+    case B100: Error = -LARGE_CHANGE; break; //Left sharp
+    case B110: Error = -SMALL_CHANGE; break; //Left soft
+    case B010: Error = 0;             break;
+    case B011: Error = SMALL_CHANGE;  break; //Right soft
+    case B001: Error = LARGE_CHANGE;  break; //Right sharp
+    case B111: Error = 1;             break;
     default:   Error = ErrorLast;
   }
 
@@ -132,5 +136,5 @@ void Update_Direction(LeftMotor, RightMotor) {
     *LeftMotorSpeed = (int)MAX_SPD + Error;
     *RightMotorSpeed = (int)MAX_SPD;
   }
-  return int *LeftMotorSpeed, int *RightMotorSpeed;
+  return;
 }
