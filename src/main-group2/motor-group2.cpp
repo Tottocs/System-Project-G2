@@ -3,17 +3,17 @@
 #endif
 
 #include <Arduino.h>
-//#include <stdexcept>
 #include "include/motor-group2.h"
 
 #define MAIN_MOTORS_STATUS true 
+#define SERIAL_STATUS true
 
 int _MOT_A1_PIN;
 int _MOT_A2_PIN;
 int _MOT_B1_PIN;
 int _MOT_B2_PIN;
 
-Initialisation = false;
+bool Initialisation = false;
 
 // Setup pins before running motors
 void Setup_Main_Motors(
@@ -34,7 +34,10 @@ void Setup_Main_Motors(
 void Set_Motor_pwm(int pwm, int IN1_PIN, int IN2_PIN) {
 
   if ((MAIN_MOTORS_STATUS == true) && (Initialisation == false)) {
-    throw std::runtime_error("Motors not initialised");
+    #if SERIAL_STATUS == true
+    Serial.print("Error: Motors not initialised");
+    #endif
+    return;
   }
 
   if (pwm < 0) {
@@ -49,9 +52,4 @@ void Set_Motor_pwm(int pwm, int IN1_PIN, int IN2_PIN) {
 void Set_Motor_Currents(int pwm_A, int pwm_B) {
   Set_Motor_pwm(pwm_A, _MOT_A1_PIN, _MOT_A2_PIN);
   Set_Motor_pwm(pwm_B, _MOT_B1_PIN, _MOT_B2_PIN);
-}
-
-void Spin_And_Wait(int pwm_A, int pwm_B, int duration) {
-  Set_Motor_Currents(pwm_A, pwm_B);
-  delay(duration);
 }
