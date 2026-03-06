@@ -1,5 +1,5 @@
 #ifndef FIRMWARE_VERSION
-#define FIRMWARE_VERSION "v.0.2" //Initial commit
+#define FIRMWARE_VERSION "v.0.2" //Implementation of line following
 #endif
 
 /*
@@ -25,6 +25,7 @@ Optional:
 #include <Servo.h>
 
 //UART only needed for debugging and testing. Will slow the arduino computation
+#define SERIAL_STATUS true // set false for field operation
 #define UART_BAUDRATE 9600 //might need to be changed
 
 //Pins on Arduino UNO 
@@ -33,11 +34,8 @@ Optional:
 #define TRIG_PIN_3 8 //Needs to be changed
 #define ECHO_PIN 2 //Global
 
+//Servo pins
 #define PWM_SERVO_PIN 6 //Needs to be changed
-
-//MAX and MIN distances for detectable object (cm)
-#define MIN_DIST 1 //Needs to be changed
-#define MAX_DIST 20 //Needs to be changed
 
 //Motor pins
 #define MOT_A1_PIN 5
@@ -45,7 +43,14 @@ Optional:
 #define MOT_B1_PIN 9
 #define MOT_B2_PIN 10
 
+//Peripheral 
 #define BUTTON 8 // Change
+
+//MAX and MIN distances for detectable object (cm)
+#define MIN_DIST 1 //Needs to be changed
+#define MAX_DIST 20 //Needs to be changed
+
+#define REFRESH_RATE 10 //Refresh rate of entire programme in ms
 
 //Creating Servo objects
 Servo arm1; // Add servo names
@@ -58,8 +63,6 @@ US_Sensor us_sens1(TRIG_PIN_1);
 //Motor speed variables
 int LeftMotorSpeed = 0;
 int RightMotorSpeed = 0;
-int* LeftMotor = &LeftMotorSpeed;
-int* RightMotor = &RightMotorSpeed;
 
 //US sensor variables
 unsigned long Distance;
@@ -67,7 +70,9 @@ int IR_Sensor_Status = B000;
 
 void setup() {
   //setup serial
-  Serial.begin(UART_BAUDRATE);
+  #if SERIAL_STATUS == true 
+  Serial.begin(UART_BAUDRATE); //Only used for debugging
+  #endif
 
   //Setup up ultrasonic sensor pins
   us_sens1.Setup_Echo_Pin(ECHO_PIN);
@@ -84,6 +89,8 @@ void loop() {
   Distance = us_sens1.Get_Distance_CM();
 
   IR_Sensor_Status = Scan();
-  Update_Direction(LeftMotor, RightMotor);
-  //Spin_And_Wait(leftServoSpeed, rightServoSpeed, 8);
+  // USE IR_Sensor_Status to create other code
+  Update_Direction(&LeftMotorSpeed, &RightMotorSpeed);
+  Set_Motor_Currents(LeftMotorSpeed, RightMotorSpeed);
+  delay(REFRESH_RATE);
 }
