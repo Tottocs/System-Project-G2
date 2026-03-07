@@ -1,4 +1,6 @@
+#ifndef FIRMWARE_VERSION
 #define FIRMWARE_VERSION "v.1.0"
+#endif
 
 /* 
 Author: Torin Stanton-Andersson
@@ -78,7 +80,7 @@ unsigned long US_Sensor::Get_Distance_CM(void){
   delayMicroseconds(TRIG_PULSE_LENGTH);
   digitalWrite(_TrigPin, LOW);
 
-  //Wait for echo 
+  //Wait for echo // Might need to change so it does not wait 
   SendTime = micros();
   while (!EchoComplete){
     if (micros() - SendTime>= PULSE_TIMEOUT){
