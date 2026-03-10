@@ -6,7 +6,7 @@ class US_Sensor
 private:
 	//Internal trigger pin number
 	int _TrigPin;
-	unsigned long _Distance;
+	unsigned long Distance;
 	
 	//static variables
 	static int _EchoPin;
