@@ -1,5 +1,5 @@
 #ifndef FIRMWARE_VERSION
-#define FIRMWARE_VERSION "v.0.1"
+#define FIRMWARE_VERSION "v.0.2"
 #endif
 
 /*
@@ -17,11 +17,13 @@ Edited By: Torin Stanton-Andersson
 #endif
 
 #define MAX_SPD 150 //Editable default = 180
-#define BLACK_MARGIN_SHIFT 100
+#define BLACK_MARGIN_SHIFT 200
 #define CAL_TIMEOUT 10000
+#define CAL_NUMBER 3
 
-#define SMALL_CHANGE 40
-#define LARGE_CHANGE 80
+#define SMALL_CHANGE 40 // Default 40
+#define LARGE_CHANGE 80 // Default 80
+#define OFF_TRACK 120   // Default 120
 
 //sensors
 int IRPins[N_SENSORS];
@@ -29,37 +31,43 @@ int IRPins[N_SENSORS];
 int IRSensorDigital[N_SENSORS] = {0, 0, 0};
 int IRSensorRaw[N_SENSORS] = {0, 0, 0};
 
-int Threshold = 500;
+int Threshold[3] = {500,500,500};
 int IR_Sensors = B000;
 int Error = 0;
 int ErrorLast = 0;
+int time1, press;
 
-void Setup_IR_Sensors(int Arr[N_SENSORS]/*, int Button*/) { // {Left, Middle, Right}
+bool Setup_IR_Sensors(int Arr[N_SENSORS], int ButtonPin) { // {Left, Middle, Right}
   for (int i = 0; i < N_SENSORS; i++) {IRPins[i] = Arr[i];}
-
+  
   // Add in calibaration for Threshold. Example below
-  /* 
-  while (digitalRead(Button == 1) { // Normally closed switch
-    delay(CAL_TIMEOUT);
-    throw std::runtime_error("IR calibration timeout");
+  time1 = millis();
+  press = digitalRead(ButtonPin);
+  while (press == HIGH) { // Normally closed switch
+    //throw std::runtime_error("IR calibration timeout");
+    if (CAL_TIMEOUT <= (millis() - time1)) {return 0;}
+    press = digitalRead(ButtonPin);
   } 
   
   for (int i = 0; i < N_SENSORS; i++) {
-    IRSensorRaw[i] = analogRead(IRPins[i]);
-    if (i > 0) {
-      Threshold = (Threshold + IRSensorRaw[i]) / 2;
-    }
-    else { 
-      Threshold = IRSensorRaw[i];
-    }
+    for (int j = 0; j < CAL_NUMBER; j++) {
+      IRSensorRaw[i] = analogRead(IRPins[i]);
+      if (j > 0) {
+        Threshold[i] = (Threshold[i] + IRSensorRaw[i])/2;
+      }
+      else { 
+        Threshold[i] = IRSensorRaw[i];
+      }
+      delay(10);
+      }
+    Threshold[i] = Threshold[i] - (int)BLACK_MARGIN_SHIFT;
   }
-
-  Threshold = Threshold - (int)BLACK_MARGIN_SHIFT;
+  /*
   if (Threshold < BLACK_MARGIN_SHIFT) {
     throw std::runtime_error("IR sensor threshold too low - Recalibrate please");
   }
   */
-  
+  return 1;
 }
 
 //sensor scanning
@@ -69,7 +77,7 @@ int Scan() {
 
   for (int i = 0; i < N_SENSORS; i++) {
     IRSensorRaw[i] = analogRead(IRPins[i]);
-    IRSensorDigital[i] = (IRSensorRaw[i] >= Threshold) ? 1 : 0;
+    IRSensorDigital[i] = (IRSensorRaw[i] >= Threshold[i]) ? 1 : 0;
 
     int b = (int)N_SENSORS - 1 - i;
     IR_Sensors |= (IRSensorDigital[i] << b);
@@ -96,8 +104,7 @@ int Scan() {
 
   Serial.print(" | err=");
   Serial.println(Error);  
-  #endif
-  
+  #endif 
 
   return IR_Sensors;
 }
@@ -113,13 +120,13 @@ void Update_Direction(int* LeftMotorSpeed,int* RightMotorSpeed) {
       //off track
       if (ErrorLast < 0) {
         //off track to left
-        *LeftMotorSpeed  = -120;
-        *RightMotorSpeed = 120;
+        *LeftMotorSpeed  = -OFF_TRACK;
+        *RightMotorSpeed = OFF_TRACK;
       } 
       else {
         //off track to right
-        *LeftMotorSpeed  = 120;
-        *RightMotorSpeed = -120;
+        *LeftMotorSpeed  = OFF_TRACK;
+        *RightMotorSpeed = -OFF_TRACK;
       }
       return;
 
