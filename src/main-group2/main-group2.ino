@@ -1,5 +1,5 @@
 #ifndef FIRMWARE_VERSION
-#define FIRMWARE_VERSION "v.0.2" //Implementation of line following
+#define FIRMWARE_VERSION "v.0.3" //Implementation of line following
 #endif
 
 /*
@@ -44,7 +44,7 @@ Optional:
 #define MOT_B2_PIN 10
 
 //Peripheral 
-#define BUTTON 8 // Change
+#define BUTTON 7 // Change
 
 int IR_Sensor_Pins[] = {A5,A4,A3};
 
@@ -52,7 +52,7 @@ int IR_Sensor_Pins[] = {A5,A4,A3};
 #define MIN_DIST 1 //Needs to be changed
 #define MAX_DIST 20 //Needs to be changed
 
-#define REFRESH_RATE 10 //Refresh rate of entire programme in ms
+#define REFRESH_RATE 50 //Refresh rate of entire programme in ms
 
 //Creating objects
 Servo arm1; // Add servo names
@@ -76,25 +76,31 @@ void setup() {
   #if SERIAL_STATUS == true 
   Serial.begin(UART_BAUDRATE); //Only used for debugging
   #endif
+  //Button for calibration
+  pinMode(BUTTON, INPUT_PULLUP);
 
   //Setup up ultrasonic sensor pins
-  us_sens1.Setup_Echo_Pin(ECHO_PIN);
-  Setup_IR_Sensors(IR_Sensor_Pins);
+  US_Sensor::Setup_Echo_Pin(ECHO_PIN);
+  Setup_IR_Sensors(IR_Sensor_Pins, BUTTON);
 
   //Setup main motor pins
   Setup_Main_Motors(MOT_A1_PIN, MOT_A2_PIN, 
                     MOT_B1_PIN, MOT_B2_PIN);
 
   //Setup calibration
-  pinMode(BUTTON, INPUT);
+  pinMode(BUTTON, INPUT_PULLUP);
 }
 
 void loop() {
+
+  Distance = us_sens1.Get_Distance_CM();
+  Distance = us_sens1.Get_Distance_CM();
   Distance = us_sens1.Get_Distance_CM();
 
   IR_Sensor_Status = Scan();
   // USE IR_Sensor_Status to create other code
   Update_Direction(&LeftMotorSpeed, &RightMotorSpeed);
   Set_Motor_Currents(LeftMotorSpeed, RightMotorSpeed);
+
   delay(REFRESH_RATE);
 }
