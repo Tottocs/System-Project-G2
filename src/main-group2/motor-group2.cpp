@@ -1,5 +1,5 @@
 #ifndef FIRMWARE_VERSION
-#define FIRMWARE_VERSION "v.0.1"
+#define FIRMWARE_VERSION "v.0.2"
 #endif
 
 #include <Arduino.h>
