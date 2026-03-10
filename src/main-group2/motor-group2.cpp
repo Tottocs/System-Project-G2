@@ -8,6 +8,8 @@
 #define MAIN_MOTORS_STATUS true 
 #define SERIAL_STATUS false
 
+#define MOTOR_CORRECT_PERCENT 100 
+
 int _MOT_A1_PIN;
 int _MOT_A2_PIN;
 int _MOT_B1_PIN;
@@ -41,11 +43,11 @@ void Set_Motor_pwm(int pwm, int IN1_PIN, int IN2_PIN) {
   }
 
   if (pwm < 0) {
-    analogWrite(IN1_PIN, -pwm);
+    analogWrite(IN1_PIN, -pwm*MOTOR_CORRECT_PERCENT/100);
     digitalWrite(IN2_PIN, LOW);
   } else {
     digitalWrite(IN1_PIN, LOW);
-    analogWrite(IN2_PIN, pwm);
+    analogWrite(IN2_PIN, pwm*MOTOR_CORRECT_PERCENT/100);
   }
 }
 
