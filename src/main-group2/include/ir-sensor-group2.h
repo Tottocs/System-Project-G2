@@ -3,7 +3,7 @@
 
 #define N_SENSORS 3
 
-void Setup_IR_Sensors(int Arr[N_SENSORS]);
+bool Setup_IR_Sensors(int Arr[N_SENSORS], int ButtonPin);
 void Update_Direction(int* LeftMotorSpeed, int* RightMotorSpeed);
 int Scan();
 
