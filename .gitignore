@@ -41,5 +41,5 @@
 *.dwo
 
 # Inventor Backups
-*/OldVersions/**/*.iam
-*/OldVersions/**/*.ipt
+**/OldVersions/**/*.iam
+**/OldVersions/**/*.ipt
