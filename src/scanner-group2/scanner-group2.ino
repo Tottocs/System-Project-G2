@@ -52,7 +52,11 @@ void setup() {
 }
 
 void loop() {
+  Scanner()
+}
 
+
+void Scanner(int* PtrDistAngle) {
   for (Angle = ANGLE_START; Angle <= RANGE_DEGREES; Angle++){ 
     //Set the angle of 
     rotator.write(Angle);
@@ -64,11 +68,16 @@ void loop() {
     DistRight = (int)us_right.Get_Distance_CM();
     
     // Detect if an object is seen by both us sensors and is in range
-    ObjectInSight =   (abs(DistLeft-DistRight)<=DISTANCE_PRECISION &&
-                      max(DistLeft,DistRight)<=RANGE_CM && !0);
+    ObjectInSight =   (abs(DistLeft-DistRight) <= DISTANCE_PRECISION &&
+                      max(DistLeft,DistRight) <= RANGE_CM && 
+                      RANGE_CM == !0);
     Distance = (ObjectInSight) ? AVERAGE(DistLeft,DistRight) : 0;
     
     //Set distance in array 
-    DistAngle[Angle-1] = Distance;
+    *(PtrDistAngle+Angle-1) = Distance;
+     
   }
+  return 
 }
+
+
