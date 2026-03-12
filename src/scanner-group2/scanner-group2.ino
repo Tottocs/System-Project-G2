@@ -1,4 +1,4 @@
-#define FIRMWARE_VERSION "v.0.1"
+#define FIRMWARE_VERSION "v.0.2"
 
 /*
 Author: Torin Stanton-Andersson
@@ -52,11 +52,15 @@ void setup() {
 }
 
 void loop() {
-  Scanner()
+  ObjectInSight = Scanner(&DistAngle[0]);
+
+  If (ObjectInSight == true) {
+    
+  }
 }
 
 
-void Scanner(int* PtrDistAngle) {
+int Scanner(int* PtrDistAngle) {
   for (Angle = ANGLE_START; Angle <= RANGE_DEGREES; Angle++){ 
     //Set the angle of 
     rotator.write(Angle);
@@ -70,14 +74,14 @@ void Scanner(int* PtrDistAngle) {
     // Detect if an object is seen by both us sensors and is in range
     ObjectInSight =   (abs(DistLeft-DistRight) <= DISTANCE_PRECISION &&
                       max(DistLeft,DistRight) <= RANGE_CM && 
-                      RANGE_CM == !0);
+                      min(DistLeft,DistRight) != 0);
     Distance = (ObjectInSight) ? AVERAGE(DistLeft,DistRight) : 0;
     
     //Set distance in array 
     *(PtrDistAngle+Angle-1) = Distance;
      
   }
-  return 
+  return ObjectInSight;
 }
 
 
