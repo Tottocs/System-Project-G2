@@ -32,6 +32,9 @@ Description:
 #define ANGLE_START 1
 #define DISTANCE_PRECISION 3
 
+#define SCAN_0 0
+#define SCAN_1 1
+
 #define AVERAGE(a,b) (a+b)/2
 
 // Setup objects
@@ -52,15 +55,18 @@ void setup() {
 }
 
 void loop() {
-  ObjectInSight = Scanner(&DistAngle[0]);
 
-  If (ObjectInSight == true) {
-    
+  if (ObjectInSight == false) {
+    ObjectInSight = Scanner(&DistAngle[0], SCAN_0);
+  }
+  else {
+    Serial.write()
+    ObjectInSight = Scanner(&DistAngle[0], SCAN_1);
   }
 }
 
 
-int Scanner(int* PtrDistAngle) {
+int Scanner(int* PtrDistAngle, int ScanType) {
   for (Angle = ANGLE_START; Angle <= RANGE_DEGREES; Angle++){ 
     //Set the angle of 
     rotator.write(Angle);
@@ -78,10 +84,12 @@ int Scanner(int* PtrDistAngle) {
     Distance = (ObjectInSight) ? AVERAGE(DistLeft,DistRight) : 0;
     
     //Set distance in array 
-    *(PtrDistAngle+Angle-1) = Distance;
-     
+    *(PtrDistAngle+Angle-1) = Distance; 
+    if (ScanType == 0 && ObjectInSight == true) {
+      return ObjectInSight;
+    }
   }
-  return ObjectInSight;
+  return ObjectInSight
 }
 
 
