@@ -1,6 +1,4 @@
-#ifndef FIRMWARE_VERSION
 #define FIRMWARE_VERSION "v.1.0"
-#endif
 
 /* 
 Author: Torin Stanton-Andersson
@@ -22,7 +20,7 @@ After that, <object>.Get_Distance_CM() can be used to return the distance.
 #define TRIG_PULSE_LENGTH 10 //Specified in datasheet
 #define HALF_SPD_SOUND 171
 #define MAG_SHIFT 10000
-#define PULSE_TIMEOUT 5000UL //Timeout in us. Max recordable distance ~400 cm
+#define PULSE_TIMEOUT 30000UL //Timeout in us. Max recordable distance ~400 cm
 
 US_Sensor* US_Sensor::ActiveSensor = nullptr;
 int US_Sensor::_EchoPin = 0;
@@ -68,6 +66,7 @@ void US_Sensor::Handle_Interrupt(void) {
 //Getting distance function
 unsigned long US_Sensor::Get_Distance_CM(void){
   //Setting variables
+  unsigned long Distance;
   unsigned long SendTime;
   ActiveSensor = this; //ARM this sensor
   EchoComplete = false; 
@@ -79,10 +78,10 @@ unsigned long US_Sensor::Get_Distance_CM(void){
   delayMicroseconds(TRIG_PULSE_LENGTH);
   digitalWrite(_TrigPin, LOW);
 
-  //Wait for echo // Might need to change so it does not wait 
+  //Wait for echo 
   SendTime = micros();
-  while (!EchoComplete) {
-    if (micros() - SendTime>= PULSE_TIMEOUT) {
+  while (!EchoComplete){
+    if (micros() - SendTime>= PULSE_TIMEOUT){
       //Out of range. Use timeout as echo pulse
       EchoComplete = true;
       return 0;
