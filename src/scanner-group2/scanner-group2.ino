@@ -21,8 +21,9 @@ Description:
 
 #define LEFT_TRIG_PIN 7
 #define RIGHT_TRIG_PIN 8
-#define ECHO_PIN 0
+#define ECHO_PIN 2
 #define SERVO_PIN 9
+#define STATUS_ISR 4
 
 #define SERVO_DELAY 50
 #define GET_DIST_DELAY 1
@@ -51,6 +52,7 @@ void setup() {
   //Serial.begin(BAUD_RATE);
   US_Sensor::Setup_Echo_Pin(ECHO_PIN);
   rotator.attach(SERVO_PIN);
+  pinMode()
   //Serial.print(sizeof(DistAngle)/sizeof(DistAngle[0]));
 }
 

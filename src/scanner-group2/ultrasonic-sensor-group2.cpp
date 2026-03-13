@@ -23,7 +23,7 @@ After that, <object>.Get_Distance_CM() can be used to return the distance.
 #define PULSE_TIMEOUT 30000UL //Timeout in us. Max recordable distance ~400 cm
 
 US_Sensor* US_Sensor::ActiveSensor = nullptr;
-int US_Sensor::_EchoPin = 0;
+int US_Sensor::_EchoPin = 2;
 
 //Setup
 US_Sensor::US_Sensor(int TrigPin){
