@@ -106,6 +106,9 @@ int Scanner(byte* PtrDistAngle, int ScanType) {
   rotator.write(ANGLE_START);
   delay(SERVO_SLOW_DELAY);
 
+  bool InRangeLeft = false;
+  bool InRangeRight = false;
+  
   //Loop through every angle and add it to array
   for (int i = ANGLE_START; i < (RANGE_DEGREES*2); i++){ 
 
@@ -122,7 +125,10 @@ int Scanner(byte* PtrDistAngle, int ScanType) {
     Serial.print(DistLeft);
 
     //If set to basic scanning:
-    if (ScanType == Basic && DistLeft <= RANGE_CM && DistRight <= RANGE_CM) {
+    InRangeLeft = (DistLeft <= RANGE_CM && DistLeft == !0);
+    InRangeRight = (DistRight <= RANGE_CM && DistRight == !0);
+    
+    if (ScanType == Basic && (InRangeLeft || InRangeRight)) {
       ObjectInSight = true;    
       return ObjectInSight;
     }
