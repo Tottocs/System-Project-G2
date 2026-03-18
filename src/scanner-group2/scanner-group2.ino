@@ -39,10 +39,10 @@ if object < 5cm big, sends message to pick it up.
 
 #define SERVO_SLOW_DELAY 50
 #define SERVO_FAST_DELAY 10
-#define GET_DIST_DELAY 1
+#define GET_DIST_DELAY 10
 
 #define RANGE_DEGREES 180
-#define RANGE_CM 20
+#define RANGE_CM 30
 #define ANGLE_START 0
 #define DISTANCE_PRECISION 3
 #define FULL_ROT (RANGE_DEGREES*2)-1
@@ -62,7 +62,7 @@ US_Sensor us_right(RIGHT_TRIG_PIN);
 byte DistAngle[RANGE_DEGREES];
 int Distance, DistLeft, DistRight;
 int Angle;
-bool ObjectInSight;
+bool ObjectInSight = false;
 
 //Main code
 // --------------------------------------------------
@@ -78,7 +78,7 @@ void setup() {
 }
 
 void loop() {
-  ObjectInSight = false;
+  //ObjectInSight = true;
   if (ObjectInSight == false) {
     digitalWrite(STATUS_LED, HIGH);
     ObjectInSight = Scanner(&DistAngle[0], SCAN_BASIC);
@@ -121,15 +121,15 @@ int Scanner(byte* PtrDistAngle, int ScanType) {
     DistLeft = (int)us_left.Get_Distance_CM();
     delay(GET_DIST_DELAY);
     DistRight = (int)us_right.Get_Distance_CM();
-    Serial.println("");
-    Serial.print(DistLeft);
 
     //If set to basic scanning:
-    InRangeLeft = (DistLeft <= RANGE_CM && DistLeft == !0);
-    InRangeRight = (DistRight <= RANGE_CM && DistRight == !0);
+    InRangeLeft = ((DistLeft <= RANGE_CM) && (DistLeft != 0));
+    InRangeRight = ((DistRight <= RANGE_CM) && (DistRight != 0));
     
     if (ScanType == Basic && (InRangeLeft || InRangeRight)) {
-      ObjectInSight = true;    
+      ObjectInSight = true;
+      //Serial.print("Distance: ");
+      //Serial.println(DistLeft);    
       return ObjectInSight;
     }
 
@@ -143,7 +143,7 @@ int Scanner(byte* PtrDistAngle, int ScanType) {
       
       //Set distance in array 
       *(PtrDistAngle+Angle) = Distance;
-      Serial.write(Distance);
+      Serial.println(Distance);
     }
   }
   return ObjectInSight;
