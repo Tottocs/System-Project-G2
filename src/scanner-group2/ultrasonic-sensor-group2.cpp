@@ -68,8 +68,9 @@ unsigned long US_Sensor::Get_Distance_CM(void){
   //Setting variables
   unsigned long Distance;
   unsigned long SendTime;
-  ActiveSensor = this; //ARM this sensor
+  
   EchoComplete = false; 
+  ActiveSensor = this; //ARM this sensor
 
   //Sending trig pulse
   digitalWrite(_TrigPin, LOW);
