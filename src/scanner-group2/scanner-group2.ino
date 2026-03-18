@@ -42,7 +42,7 @@ if object < 5cm big, sends message to pick it up.
 #define GET_DIST_DELAY 10
 
 #define RANGE_DEGREES 180
-#define RANGE_CM 30
+#define RANGE_CM 20
 #define ANGLE_START 0
 #define DISTANCE_PRECISION 3
 #define FULL_ROT (RANGE_DEGREES*2)-1
@@ -51,7 +51,6 @@ if object < 5cm big, sends message to pick it up.
 #define SCAN_ADV 1
 
 //Example of using macro (not the best use)
-#define ABS(a) a ? a : -a
 #define AVERAGE(a,b) (a+b)/2
 
 //Setup objects
@@ -70,29 +69,38 @@ bool ObjectInSight = false;
 void setup() {
   //Setup serial
   Serial.begin(BAUD_RATE);
+
   //Setup pins
   pinMode(SEND_ISR_PIN, OUTPUT);
   pinMode(STATUS_LED, OUTPUT);
   US_Sensor::Setup_Echo_Pin(ECHO_PIN);
   rotator.attach(SERVO_PIN);
+  digitalWrite(SEND_ISR_PIN, LOW);
 }
 
 void loop() {
-  //ObjectInSight = true;
+  
+  //Serial.print(ObjectInSight);
+  //ObjectInSight = false;
   if (ObjectInSight == false) {
     digitalWrite(STATUS_LED, HIGH);
     ObjectInSight = Scanner(&DistAngle[0], SCAN_BASIC);
   }
   else if (ObjectInSight) {
     digitalWrite(SEND_ISR_PIN, HIGH);
+
     digitalWrite(STATUS_LED, LOW);
     delay(SEND_DELAY);
     Serial.write(START_MSG);
-    ObjectInSight = Scanner(&DistAngle[0], SCAN_ADV);
+    Scanner(&DistAngle[0], SCAN_ADV);
     Serial.write(END_MSG);
     if (!Wait_For_Ack(RECIEVE_TIMEOUT)) {
       Send_Array();
     }
+    else {
+      Serial.println("ObjectInSight not defined");
+    }
+    digitalWrite(SEND_ISR_PIN, LOW);
   }
 }
 
@@ -125,11 +133,11 @@ int Scanner(byte* PtrDistAngle, int ScanType) {
     //If set to basic scanning:
     InRangeLeft = ((DistLeft <= RANGE_CM) && (DistLeft != 0));
     InRangeRight = ((DistRight <= RANGE_CM) && (DistRight != 0));
-    
+    //Serial.println(InRangeRight);
     if (ScanType == Basic && (InRangeLeft || InRangeRight)) {
       ObjectInSight = true;
       //Serial.print("Distance: ");
-      //Serial.println(DistLeft);    
+      //Serial.println(DistRight);    
       return ObjectInSight;
     }
 
@@ -140,13 +148,13 @@ int Scanner(byte* PtrDistAngle, int ScanType) {
                         max(DistLeft,DistRight) <= RANGE_CM && 
                         min(DistLeft,DistRight) != 0);
       Distance = (ObjectInSight) ? AVERAGE(DistLeft,DistRight) : 0;
-      
+      Serial.println(Distance);
       //Set distance in array 
       *(PtrDistAngle+Angle) = Distance;
-      Serial.println(Distance);
+      //Serial.println(Distance);
     }
   }
-  return ObjectInSight;
+  return ObjectInSight = false;
 }
 
 bool Wait_For_Ack(unsigned long Timeout) {
