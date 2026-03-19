@@ -7,5 +7,8 @@ void Setup_Main_Motors(
 	int MOT_B1_PIN, int MOT_B2_PIN);
 void Set_Motor_pwm(int pwm, int IN1_PIN, int IN2_PIN);
 void Set_Motor_Currents(int pwm_A, int pwm_B);
+void Turn_90_Anti_Clockwise();
+void Turn_90_Clockwise();
+void Turn_180();
 
 #endif
