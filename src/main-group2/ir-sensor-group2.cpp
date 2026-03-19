@@ -129,13 +129,28 @@ void Update_Direction(int* LeftMotorSpeed,int* RightMotorSpeed) {
         *RightMotorSpeed = -OFF_TRACK;
       }
       return;
+    case B111:
+    while (true) {
+      Scan();
+      //right turn until line found again
+      *LeftMotorSpeed = (int)MAX_SPD;
+      *RightMotorSpeed = (int)-MAX_SPD;
+      //stop when line found
+      if(IR_Sensors == B010 || IR_Sensors == B011 || IR_Sensors == B110){
+        delay(20);
+        Scan();
+        if(IR_Sensors == B010 || IR_Sensors == B011 || IR_Sensors == B110){
+          break;
+            }
+        }
+    }
+    return;
 
     case B100: Error = -LARGE_CHANGE; break; //Left sharp
     case B110: Error = -SMALL_CHANGE; break; //Left soft
     case B010: Error = 0;             break;
     case B011: Error = SMALL_CHANGE;  break; //Right soft
     case B001: Error = LARGE_CHANGE;  break; //Right sharp
-    case B111: Error = 1;             break;
     default:   Error = ErrorLast;
   }
 
