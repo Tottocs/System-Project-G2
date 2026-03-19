@@ -52,6 +52,12 @@ int IR_Sensor_Pins[] = {A5,A4,A3};
 #define MIN_DIST 1 //Needs to be changed
 #define MAX_DIST 20 //Needs to be changed
 
+//Delays in ms
+#define START_DELAY 1000
+#define BASE_DELAY 400
+
+#define REFRESH_RATE 50 //Refresh rate of entire programme in ms
+
 //
 int visitedBins = 0;
 
@@ -64,55 +70,11 @@ bool turned90 = false;
 //180 degree turn checker
 bool turned180 = false;
 
-//90 degree anticlockwise turn helper
-void Turn90AntiClockwise()
-{
-  //left forward right backward
-  Set_Motor_Currents(50, -50);
-  delay(500); //might need adjusted
-
-  Set_Motor_Currents(0,0);
-}
-
-//90 degree clockwise turn helper
-void Turn90Clockwise()
-{
-  //right forward left backward
-  Set_Motor_Currents(-50, 50);
-  delay(500); //might need adjusted
-
-  Set_Motor_Currents(0,0);
-}
-
-//180 degree turn helper
-void Turn180()
-{
-  //left forward right backward
-  Set_Motor_Currents(50, -50);
-  delay(1000); //might need adjusted
-
-  Set_Motor_Currents(0,0);
-}
-
-//reversing anticlockwise helper
-void Turn90Anticlockwise()
-{
-  Set_Motor_Currents(-50, 50);
-  delay(100); //
-  Set_Motor_Currents(0,0);
-}
-
-#define REFRESH_RATE 50 //Refresh rate of entire programme in ms
-
 //Creating objects
 Servo arm1; // Add servo names
 Servo arm2;
 Servo door;
 Servo scanner;
-
-US_Sensor us_sens1(TRIG_PIN_1); //front sensor
-US_Sensor us_sens2(TRIG_PIN_2); //side sensor
-US_Sensor us_sens3(TRIG_PIN_3); //back sensor
 
 //state 5
 int obstacleStage = 0;
@@ -137,7 +99,7 @@ int dropoff = 0;
 enum RobotState {
   ERROR = 0,
   STARTING = 1,
-  PICKUP = 2,
+  FOLLOW_LINE = 2,
   DROPOFF = 3,
   HOME = 4,
   OBSTACLE = 5,
@@ -167,12 +129,6 @@ void setup() {
 }
 
 void loop() {
-
-  DistanceFront = us_sens1.Get_Distance_CM();
-
-DistanceRight = us_sens2.Get_Distance_CM();
-  DistanceBack = us_sens3.Get_Distance_CM();
-
   IR_Sensor_Status = Scan();
 
   switch(CurrentState)
@@ -182,8 +138,8 @@ DistanceRight = us_sens2.Get_Distance_CM();
       Starting();
     break;
 
-    case PICKUP:
-      Pickup();
+    case FOLLOW_LINE:
+      FollowLine();
     break;
 
     case DROPOFF:
@@ -202,8 +158,6 @@ DistanceRight = us_sens2.Get_Distance_CM();
     default:
       CurrentState = ERROR;
   }
-
-
   delay(REFRESH_RATE); //might get rid
 }
 
@@ -211,16 +165,16 @@ DistanceRight = us_sens2.Get_Distance_CM();
 void Starting()
 {
   Set_Motor_Currents(60,60);
+  delay(400);
   //once one 90 degree turn has been made, switch to line following with pickup mode
-  if(IR_Sensor_Status != B000)
+  if(IR_Sensor_Status != B111)
   {
     CurrentState = PICKUP;
   }
-
 }
 
 //STATE 2 line following and pickup
-void Pickup()
+void FollowLine()
 {
 
   if(DistanceFront > MIN_DIST && DistanceFront < MAX_DIST)
@@ -270,7 +224,7 @@ void Dropoff()
     //reverse turning
     case 1:
 
-      Turn90Anticlockwise();
+      Turn_90_Anti_Clockwise();
       dropoff = 2;
 
     break;
@@ -359,12 +313,12 @@ void Obstacle()
       {
         Set_Motor_Currents(0,0);
         Beep(2); //................................................................. need to make beep function
-        delay (2000);
+        delay(2000);
         Beep(3);
         Set_Motor_Currents(-40,-40);
-        delay (2000);
+        delay(2000);
 
-        Turn90Anticlockwise(); // face alongside object
+        Turn_90_Anticlockwise(); // face alongside object
         obstacleStage = 1;
       }
 
@@ -389,7 +343,7 @@ else if(DistanceRight > 12 && DistanceRight < 20) //turn right too far
 }
 else if(DistanceRight > MAX_DIST)//no obstacle detected go back to line following
 {
-  Turn90Clockwise();
+  Turn_90_Clockwise();
   obstacleStage = 2;
 }
     break;
