@@ -4,7 +4,7 @@
 
 #define UART_BAUDRATE 9600
 #define INT_PIN 2
-#define SERIAL_TIMEOUT 100
+#define SERIAL_TIMEOUT 1000
 
 #define START_MSG 255
 #define END_MSG 254
@@ -15,7 +15,13 @@
 
 #define BLINK_DELAY 700
 
+//States
+#define BLINK B0
+#define STORE B1
+
 byte Arr[180];
+int State = B0; 
+
 
 void setup() {
   Serial.begin(UART_BAUDRATE);
@@ -25,15 +31,29 @@ void setup() {
 }
 
 void loop() {
+  // State machine
+  switch (State) {
+    case STORE: Store_Data();  break; 
+    case BLINK: Blink();       break;
+  default: 
+    Blink();
+  }
+}
+
+void Blink() {
   digitalWrite(LED_BUILTIN, HIGH);
   delay(BLINK_DELAY);
   digitalWrite(LED_BUILTIN, LOW);
   delay(BLINK_DELAY);
 }
-
 void ISR_Handler() {
+  State = B1;
+  // Maths on the array
+}
+
+void Store_Data() {
   if (!Read_Serial()) {
-    Serial.write(UNREC_MSG);
+    Serial.println(UNREC_MSG);
   }
   else {
     Serial.print("Arr: {");
@@ -43,42 +63,54 @@ void ISR_Handler() {
     }
     Serial.println("}");
   }
-  // Maths on the array
+  State = B0;
 }
 
 bool Read_Serial() {
   int Index = 0;
-  bool Serial_Status = true;
   byte Msg = 0;
   unsigned long t0 = millis();
+  
   t0 = millis();
-  Serial.println(t0);
-  while(!Serial.available()) {
-    Serial.println(millis() - t0);
+  while(true) {    
+    if (Serial.available() > 0) {
+      Msg = Serial.read();
+      if (Msg == START_MSG) break;
+    }
     if (millis() - t0 >= SERIAL_TIMEOUT) {
+      Serial.println(millis() - t0);
+      Serial.println("0"); 
       return false;
     }
   }
-  Serial.println("1");
-  if (Serial.read() == START_MSG) {
-    while (Serial_Status) {
-      t0 = millis();
-      while (!Serial.available()) {
-        if (millis() - t0 >= SERIAL_TIMEOUT) {
-          return false;
-        }
-      }; // can be dangerous if gets stuck
-      Msg = Serial.read();
-      if (Msg == END_MSG) {
-        Serial.write(ACK_MSG);
-        Serial_Status = false;
-        return true;
-      }
-      else {
-        Arr[Index] = Msg;
-        Index++;
+  
+  while (true) {
+    t0 = millis();
+    while (true) {
+      if (Serial.available() > 0) break;
+      if (millis() - t0 >= SERIAL_TIMEOUT) {
+        Serial.println("1"); 
+        return false;
       }
     }
+    Msg = Serial.read();
+    //Serial.println(Index);
+    // can be dangerous if gets stuck
+    if (Msg == END_MSG) {
+      Serial.write(ACK_MSG);
+      return true;
+    }
+    if  (Index < RANGE_DEGREES) {
+      Serial.print(Msg);
+      Arr[Index] = Msg;
+      Index++;
+    }
+    else {
+      Serial.println("2");
+      return false;
+    }
   }
+  
+  Serial.println("3");
   return false;
 }

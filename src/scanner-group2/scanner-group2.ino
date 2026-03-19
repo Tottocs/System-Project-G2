@@ -23,7 +23,7 @@ if object < 5cm big, sends message to pick it up.
 #include "include\ultrasonic-sensor-group2.h"
 
 #define BAUD_RATE 9600
-#define SEND_DELAY 50
+#define SEND_DELAY 100
 #define RECIEVE_TIMEOUT 100 
 #define START_MSG 255
 #define END_MSG 254
@@ -37,6 +37,7 @@ if object < 5cm big, sends message to pick it up.
 #define SEND_ISR_PIN 4
 #define STATUS_LED 12
 
+#define START_DELAY 100
 #define SERVO_SLOW_DELAY 50
 #define SERVO_FAST_DELAY 10
 #define GET_DIST_DELAY 10
@@ -90,7 +91,7 @@ void loop() {
     digitalWrite(SEND_ISR_PIN, HIGH);
 
     digitalWrite(STATUS_LED, LOW);
-    delay(SEND_DELAY);
+    //delay(SEND_DELAY);
     Serial.write(START_MSG);
     Scanner(&DistAngle[0], SCAN_ADV);
     Serial.write(END_MSG);
@@ -148,7 +149,8 @@ int Scanner(byte* PtrDistAngle, int ScanType) {
                         max(DistLeft,DistRight) <= RANGE_CM && 
                         min(DistLeft,DistRight) != 0);
       Distance = (ObjectInSight) ? AVERAGE(DistLeft,DistRight) : 0;
-      Serial.println(Distance);
+      delay(1);
+      Serial.write(Distance);
       //Set distance in array 
       *(PtrDistAngle+Angle) = Distance;
       //Serial.println(Distance);
@@ -175,6 +177,7 @@ void Send_Array() {
   for (int i = ANGLE_START; i < RANGE_DEGREES; i++) {
     Serial.write(DistAngle[i]);
   }
+  delay(1);
   Serial.write(END_MSG);
   return;
 }
