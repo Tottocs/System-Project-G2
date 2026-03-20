@@ -28,12 +28,6 @@ Optional:
 #define SERIAL_STATUS false // set false for field operation
 #define UART_BAUDRATE 9600 //might need to be changed
 
-//Pins on Arduino UNO 
-#define TRIG_PIN_1 8 //Needs to be changed
-#define TRIG_PIN_2 8 //Needs to be changed
-#define TRIG_PIN_3 8 //Needs to be changed
-#define ECHO_PIN 2 //Global
-
 //Servo pins
 #define PWM_SERVO_PIN 6 //Needs to be changed
 
@@ -42,6 +36,8 @@ Optional:
 #define MOT_A2_PIN 6
 #define MOT_B1_PIN 9
 #define MOT_B2_PIN 10
+
+#define BUZZ_PIN 9
 
 //Peripheral 
 #define BUTTON 7 // Change
@@ -56,13 +52,10 @@ int IR_Sensor_Pins[] = {A5,A4,A3};
 #define START_DELAY 1000
 #define BASE_DELAY 400
 
+#define BUZZ_FREQ 3000
+#define BUZZ_DURATION 500
+
 #define REFRESH_RATE 50 //Refresh rate of entire programme in ms
-
-//
-int visitedBins = 0;
-
-//state 3
-int dropOff = 0;
 
 //90 degree turn checker
 bool turned90 = false;
@@ -85,15 +78,22 @@ int RightMotorSpeed = 0;
 
 //US sensor variables
 unsigned long DistanceFront; //front sensor 
-unsigned long
-DistanceRight; //side sensor
+unsigned long DistanceRight; //side sensor
 unsigned long DistanceBack; //back sensor
+
 //IR Sensor variable
 int IR_Sensor_Status = B000;
 
 //pickup and dropoff
 int pickup = 0;
 int dropoff = 0;
+//
+int visitedBins = 0;
+
+//state 3
+int dropOff = 0;
+
+int ObjectDetected = 0;
 
 //states
 enum RobotState {
@@ -116,8 +116,7 @@ void setup() {
   //Button for calibration
   pinMode(BUTTON, INPUT_PULLUP);
 
-  //Setup up ultrasonic sensor pins
-  US_Sensor::Setup_Echo_Pin(ECHO_PIN);
+  //Setup up ir sensor pins
   Setup_IR_Sensors(IR_Sensor_Pins, BUTTON);
 
   //Setup main motor pins
@@ -161,6 +160,9 @@ void loop() {
   delay(REFRESH_RATE); //might get rid
 }
 
+// State functions
+// -------------------------------------------------
+
 //STATE 1 go from charging point to line  
 void Starting()
 {
@@ -169,7 +171,7 @@ void Starting()
   //once one 90 degree turn has been made, switch to line following with pickup mode
   if(IR_Sensor_Status != B111)
   {
-    CurrentState = PICKUP;
+    CurrentState = FOLLOW_LINE;
   }
 }
 
@@ -186,7 +188,7 @@ void FollowLine()
   Update_Direction(&LeftMotorSpeed,&RightMotorSpeed);
   Set_Motor_Currents(LeftMotorSpeed,RightMotorSpeed);
 
-  if(ObjectDetected())
+  if(ObjectDetected)
   {
     PickupObject();
     //pickup code here or call helper ^
@@ -292,7 +294,7 @@ void Home()
   if(IR_Sensor_Status == B111)
   {
     Set_Motor_Currents(0,0);
-    Turn180();
+    Turn_180();
     while(1); // stop forever
   }
  
@@ -318,7 +320,7 @@ void Obstacle()
         Set_Motor_Currents(-40,-40);
         delay(2000);
 
-        Turn_90_Anticlockwise(); // face alongside object
+        Turn_90_Anti_Clockwise(); // face alongside object
         obstacleStage = 1;
       }
 
@@ -330,23 +332,23 @@ void Obstacle()
       //wall following
       //if obstacle within range
       if(DistanceRight > 8 && DistanceRight < 12)
-{
-  Set_Motor_Currents(50,50);
-}
-else if(DistanceRight < 8) //turn left too close
-{
-  Set_Motor_Currents(50,80);
-}
-else if(DistanceRight > 12 && DistanceRight < 20) //turn right too far
-{
-  Set_Motor_Currents(80,50);
-}
-else if(DistanceRight > MAX_DIST)//no obstacle detected go back to line following
-{
-  Turn_90_Clockwise();
-  obstacleStage = 2;
-}
-    break;
+      {
+      Set_Motor_Currents(50,50);
+      }
+      else if(DistanceRight < 8) //turn left too close
+      {
+        Set_Motor_Currents(50,80);
+      }
+      else if(DistanceRight > 12 && DistanceRight < 20) //turn right too far
+      {
+        Set_Motor_Currents(80,50);
+      }
+      else if(DistanceRight > MAX_DIST)//no obstacle detected go back to line following
+      {
+        Turn_90_Clockwise();
+        obstacleStage = 2;
+      }
+      break;
 
     //go back to line following
     case 2:
@@ -359,9 +361,20 @@ else if(DistanceRight > MAX_DIST)//no obstacle detected go back to line followin
       if(IR_Sensor_Status != B000)
       {
         obstacleStage = 0; // reset
-        CurrentState = PICKUP;
+        CurrentState = FOLLOW_LINE;
       }
 
-    break;
+      break;
+  }
+}
+
+// Supplementary functions
+// --------------------------------------------------------
+
+void Beep(int BeepNumber) {
+  int i = 0;
+  while (i < BeepNumber) {
+    tone(BUZZ_PIN, BUZZ_FREQ, BUZZ_DURATION);
+    i++;
   }
 }
