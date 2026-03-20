@@ -25,7 +25,7 @@ int _MOT_B2_PIN;
 
 bool Initialisation = false;
 
-int Corrected_pwm;
+int Corrected_pwm_A;
 
 // Setup pins before running motors
 void Setup_Main_Motors(
