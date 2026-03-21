@@ -50,12 +50,23 @@ int IR_Sensor_Pins[] = {A5,A4,A3};
 
 //Delays in ms
 #define START_DELAY 1000
+#define DRV_OFF_BLK_DEL 500
 #define BASE_DELAY 400
 
 #define BUZZ_FREQ 3000
 #define BUZZ_DURATION 500
 
 #define REFRESH_RATE 50 //Refresh rate of entire programme in ms
+
+// SPEEDS
+
+#define NOMINAL_SPD 120
+#define STARTING_SPD 80
+#define DROPOFF_SPD 40
+#define 
+#define
+#define
+
 
 //90 degree turn checker
 bool turned90 = false;
@@ -128,6 +139,7 @@ void setup() {
 }
 
 void loop() {
+  CurrentState = FOLLOW_LINE;
   IR_Sensor_Status = Scan();
 
   switch(CurrentState)
@@ -166,11 +178,10 @@ void loop() {
 //STATE 1 go from charging point to line  
 void Starting()
 {
-  Set_Motor_Currents(60,60);
-  delay(400);
-  //once one 90 degree turn has been made, switch to line following with pickup mode
-  if(IR_Sensor_Status != B111)
-  {
+  Set_Motor_Currents(STARTING_SPD,STARTING_SPD);
+  delay(DRV_OFF_BLK_DEL);
+  
+  if(IR_Sensor_Status != B111) {
     CurrentState = FOLLOW_LINE;
   }
 }
@@ -216,7 +227,7 @@ void Dropoff()
 
       if((IR_Sensor_Status == B111) && (DistanceRight > MIN_DIST && DistanceRight < MAX_DIST))
       {
-        Set_Motor_Currents(40,40);
+        Set_Motor_Currents(DROPOFF_SPD,DROPOFF_SPD);
         delay(1500);
         dropoff = 1;
       }
