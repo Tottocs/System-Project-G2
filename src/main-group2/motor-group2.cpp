@@ -1,6 +1,9 @@
 #ifndef FIRMWARE_VERSION
 #define FIRMWARE_VERSION "v.0.2"
 #endif
+/*
+Author: Torin Stanton-Andersson
+*/
 
 #include <Arduino.h>
 #include "include/motor-group2.h"
