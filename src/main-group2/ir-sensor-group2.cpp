@@ -1,5 +1,5 @@
 #ifndef FIRMWARE_VERSION
-#define FIRMWARE_VERSION "v.0.2"
+#define FIRMWARE_VERSION "v.0.3"
 #endif
 
 /*
@@ -16,7 +16,7 @@ Edited By: Torin Stanton-Andersson
 #define N_SENSORS 3 //DO NOT EDIT
 #endif
 
-#define MAX_SPD 150 //Editable default = 180
+#define MAX_SPD 130 //Editable default = 180
 #define BLACK_MARGIN_SHIFT 200
 #define CAL_TIMEOUT 10000
 #define CAL_NUMBER 3
@@ -118,33 +118,27 @@ void Update_Direction(int* LeftMotorSpeed,int* RightMotorSpeed) {
 
     case B000:  
       //off track
-      if (ErrorLast < 0) {
-        //off track to left
-        *LeftMotorSpeed  = -OFF_TRACK;
-        *RightMotorSpeed = OFF_TRACK;
-      } 
-      else {
-        //off track to right
-        *LeftMotorSpeed  = OFF_TRACK;
-        *RightMotorSpeed = -OFF_TRACK;
-      }
+      Off_Track(ErrorLast, LeftMotorSpeed, RightMotorSpeed);
       return;
     case B111:
-    while (true) {
-      Scan();
-      //right turn until line found again
-      *LeftMotorSpeed = (int)MAX_SPD;
-      *RightMotorSpeed = (int)-MAX_SPD;
-      //stop when line found
-      if(IR_Sensors == B010 || IR_Sensors == B011 || IR_Sensors == B110){
-        delay(20);
+      Error = 1; 
+      break;
+      /*
+      while (true) {
         Scan();
+        //right turn until line found again
+        *LeftMotorSpeed = (int)MAX_SPD;
+        *RightMotorSpeed = (int)-MAX_SPD;
+        //stop when line found
         if(IR_Sensors == B010 || IR_Sensors == B011 || IR_Sensors == B110){
-          break;
-            }
-        }
-    }
-    return;
+          delay(20);
+          Scan();
+          if(IR_Sensors == B010 || IR_Sensors == B011 || IR_Sensors == B110){
+            break;
+              }
+          }
+      }
+      return; */
 
     case B100: Error = -LARGE_CHANGE; break; //Left sharp
     case B110: Error = -SMALL_CHANGE; break; //Left soft
@@ -155,12 +149,30 @@ void Update_Direction(int* LeftMotorSpeed,int* RightMotorSpeed) {
   }
 
   //smoothing turning
-  if (Error >= 0) {
+  if ((Error >= 0) && (Error != 1)) {
     *LeftMotorSpeed = (int)MAX_SPD;
     *RightMotorSpeed = (int)MAX_SPD - Error;
-  } else {
+  } 
+  else if (Error < 0) {
     *LeftMotorSpeed = (int)MAX_SPD + Error;
     *RightMotorSpeed = (int)MAX_SPD;
   }
+  else { // if (Error == 1)
+    *LeftMotorSpeed = 0;
+    *RightMotorSpeed = 0;
+  }
   return;
+}
+
+void Off_Track(int ErrorLast, int* LeftMotorSpeed,int* RightMotorSpeed) {
+  if (ErrorLast < 0) {
+    //off track to left
+    *LeftMotorSpeed  = -OFF_TRACK;
+    *RightMotorSpeed = OFF_TRACK;
+  } 
+  else {
+    //off track to right
+    *LeftMotorSpeed  = OFF_TRACK;
+    *RightMotorSpeed = -OFF_TRACK;
+  }  
 }
