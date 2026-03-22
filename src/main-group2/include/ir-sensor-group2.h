@@ -6,5 +6,6 @@
 bool Setup_IR_Sensors(int Arr[N_SENSORS], int ButtonPin);
 void Update_Direction(int* LeftMotorSpeed, int* RightMotorSpeed);
 int Scan();
+void Off_Track(int ErrorLast, int* LeftMotorSpeed,int* RightMotorSpeed);
 
 #endif
