@@ -49,6 +49,8 @@ Optional:
 
 //Debug LEDs
 #define ERROR_LED 4
+#define CALIBRATION_LED 8
+#define RUNNING_LED 11
 
 int IR_Sensor_Pins[] = {A5,A4,A3};
 
@@ -154,6 +156,7 @@ enum RobotState {
 
 RobotState CurrentState = STARTING;
 
+int startStage = 0;
 int obstacleStage = 0;
 int HomeState = 1;
 bool HomeTurned = false;
@@ -167,17 +170,23 @@ void setup() {
   //Button for calibration
   pinMode(BUTTON, INPUT_PULLUP);
 
+  //Debug LEDs
+  pinMode(ERROR_LED, OUTPUT);
+  pinMode(CALIBRATION_LED, OUTPUT);
+  pinMode(RUNNING_LED, OUTPUT);
+
+  digitalWrite(RUNNING_LED, HIGH); 
   //Setup up ir sensor pins
-  if (!Setup_IR_Sensors(IR_Sensor_Pins, BUTTON)) {
+  if (!Setup_IR_Sensors(IR_Sensor_Pins, BUTTON, CALIBRATION_LED)) {
+    Serial.println("0");
     CurrentState = ERROR;
   } 
+  digitalWrite(CALIBRATION_LED, LOW);
 
   //Setup main motor pins
   Setup_Main_Motors(MOT_A1_PIN, MOT_A2_PIN, 
                     MOT_B1_PIN, MOT_B2_PIN);
 
-  //Setup calibration
-  pinMode(BUTTON, INPUT_PULLUP);
   /*
   Set_Motor_Currents(NOMINAL_SPD, NOMINAL_SPD);
   delay(DRV_OFF_BLK_DEL);
@@ -187,7 +196,7 @@ void setup() {
 void loop() {
   //Serial.println(CurrentState);
   if (CurrentState != ERROR) { // Testing
-     //CurrentState = HOME;  
+     //CurrentState = STARTING;  
   }
   
   IR_Sensor_Status = Scan();
@@ -225,11 +234,47 @@ void loop() {
 //STATE 1 go from charging point to line  
 void Starting()
 {
-  Set_Motor_Currents(STARTING_SPD,STARTING_SPD);
-  delay(DRV_OFF_BLK_DEL);
-  
-  if(IR_Sensor_Status != ALL_BLACK) {
-    CurrentState = FOLLOW_LINE;
+  switch(startStage)
+  {
+    // STEP 0
+    case 0:
+      Set_Motor_Currents(90,90);
+      delay(300);
+
+      if(IR_Sensor_Status != B000)
+      {
+        startStage = 1;
+      }
+    break;
+
+    // STEP 1 drive foward
+    case 1:
+      Update_Direction(&LeftMotorSpeed,&RightMotorSpeed);
+      Set_Motor_Currents(LeftMotorSpeed,RightMotorSpeed);
+      if(IR_Sensor_Status == B111)
+  {
+    Set_Motor_Currents(90,90);
+      delay(300);
+    startStage = 2;
+  }
+  break;
+
+    // STEP 2 turn right 
+     case 2:
+      digitalWrite(4,HIGH);
+      delay(500);
+      digitalWrite(4,LOW);
+      Set_Motor_Currents(0,0);
+
+      Turn_130_Clockwise();
+
+      startStage = 3;
+    break;
+
+    // STEP 3 next state
+    case 3:
+      CurrentState = FOLLOW_LINE;
+    break;
   }
 }
 
@@ -471,8 +516,10 @@ void Obstacle()
 
 void Error() {
   Set_Motor_Currents(0,0);
+  digitalWrite(RUNNING_LED, LOW);
+  digitalWrite(CALIBRATION_LED, LOW);
   Blink(ERROR_LED, BLINK_LENGTH);
-  Serial.print("Error");
+  //Serial.print("Error");
 }
 
 // Supplementary functions
