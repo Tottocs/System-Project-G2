@@ -1,23 +1,20 @@
 #ifndef FIRMWARE_VERSION
-#define FIRMWARE_VERSION "v.0.5" //Implementation of line following
+#define FIRMWARE_VERSION "v.0.3" //Implementation of line following
 #endif
 
 /*
-Authors: Lucy Grierson, Torin Stanton-Andersson
-
 [] Ultrasonic Sensor
 [] RGB Sensor
 [x] Motors
 [] Servos (Which ones)
 [x] IR sensors
 [] Status LEDs
-[x] Buzzer
+[] Buzzer or sound
 
 Optional:
 [] Eyes
 
 */
-
 
 //Including project libraries
 #include "include/ultrasonic-sensor-group2.h" 
@@ -27,12 +24,10 @@ Optional:
 //Including online libraries 
 #include <Servo.h>
 
-//UART only needed for debugging and or comunication between chips. Will slow the arduino computation
-#define SERIAL_STATUS true // set false for field operation
+//UART only needed for debugging and testing. Will slow the arduino computation
+#define SERIAL_STATUS false // set false for field operation
 #define UART_BAUDRATE 9600 //might need to be changed
 
-// PINS
-//---------------------------------
 //Servo pins
 #define PWM_SERVO_PIN 6 //Needs to be changed
 
@@ -52,15 +47,9 @@ Optional:
 
 int IR_Sensor_Pins[] = {A5,A4,A3};
 
-// CONSTANTS
-//------------------------------------
-
 //MAX and MIN distances for detectable object (cm)
 #define MIN_DIST 1 //Needs to be changed
 #define MAX_DIST 20 //Needs to be changed
-
-//Number of rubiish objects to pick up
-#define N_OBJECTS 3
 
 //Delays in ms
 #define START_DELAY 1000
@@ -118,6 +107,15 @@ bool tunred130 = false;
 //180 degree turn checker
 bool turned180 = false;
 
+//Creating objects
+Servo arm1; // Add servo names
+Servo arm2;
+//Servo door;
+Servo scanner;
+
+//state 5
+int obstacleStage = 0;
+
 //Motor speed variables
 int LeftMotorSpeed = 0;
 int RightMotorSpeed = 0;
@@ -128,7 +126,7 @@ unsigned long DistanceRight; //side sensor
 unsigned long DistanceBack; //back sensor
 
 //IR Sensor variable
-volatile int IR_Sensor_Status = B000;
+int IR_Sensor_Status = B000;
 
 //pickup and dropoff
 int pickup = 0;
@@ -136,14 +134,13 @@ int dropoff = 0;
 //
 int visitedBins = 0;
 
-//state 1
-int startStage = 0;
-
 //state 3
 int dropOff = 0;
 
-int ObjectDetected = 0;
+//state 1
+int startStage = 0;
 
+int ObjectDetected = 0;
 
 //states
 enum RobotState {
@@ -158,10 +155,8 @@ enum RobotState {
 
 RobotState CurrentState = STARTING;
 
-int obstacleStage = 0;
 int HomeState = 1;
 bool HomeTurned = false;
-
 
 void setup() {
   //setup serial
@@ -172,9 +167,7 @@ void setup() {
   pinMode(BUTTON, INPUT_PULLUP);
 
   //Setup up ir sensor pins
-  if (!Setup_IR_Sensors(IR_Sensor_Pins, BUTTON)) {
-    CurrentState = ERROR;
-  } 
+  Setup_IR_Sensors(IR_Sensor_Pins, BUTTON);
 
   //Setup main motor pins
   Setup_Main_Motors(MOT_A1_PIN, MOT_A2_PIN, 
@@ -182,45 +175,43 @@ void setup() {
 
   //Setup calibration
   pinMode(BUTTON, INPUT_PULLUP);
-  /*
-  Set_Motor_Currents(NOMINAL_SPD, NOMINAL_SPD);
-  delay(DRV_OFF_BLK_DEL);
-  */
+  pinMode(ERROR_LED, OUTPUT);
+  digitalWrite(4,HIGH);
+  delay(1000);
+  digitalWrite(4,LOW);
 }
 
 void loop() {
-  //Serial.println(CurrentState);
-  if (CurrentState != ERROR) {
-    //CurrentState = HOME;  
-  }
-  
   IR_Sensor_Status = Scan();
 
   switch(CurrentState)
   {
 
     case STARTING:
-      Starting();   break;
+      Starting();
+    break;
 
     case FOLLOW_LINE:
-      FollowLine(); break;
+      FollowLine();
+    break;
 
     case DROPOFF:
-      Dropoff();    break;
+      Dropoff();
+    break;
 
     case HOME:
-      Home();       break;
+      Home();
+    break;
 
     case OBSTACLE:
-      Obstacle();   break;
+      Obstacle();
+    break;
 
-    case ERROR:
-      Error();      break;
 
     default:
       CurrentState = ERROR;
   }
-  //delay(REFRESH_RATE); //might get rid
+
 }
 
 // State functions
@@ -273,10 +264,10 @@ void Starting()
   }
 }
 
-
 //STATE 2 line following and pickup
 void FollowLine()
 {
+
   if(DistanceFront > MIN_DIST && DistanceFront < MAX_DIST)
   {
     CurrentState = OBSTACLE;
@@ -285,11 +276,6 @@ void FollowLine()
 
   Update_Direction(&LeftMotorSpeed,&RightMotorSpeed);
   Set_Motor_Currents(LeftMotorSpeed,RightMotorSpeed);
-  if (IR_Sensor_Status == ALL_BLACK) {
-    Set_Motor_Currents(0,0);
-    delay(BLK_CONFIRM_DELAY);
-    Calibrate_On_Line(BLK_LINE_TIMEOUT);
-  }
 
   if(ObjectDetected)
   {
@@ -298,7 +284,7 @@ void FollowLine()
     pickup++;
   }
 
-  if(pickup >= N_OBJECTS)
+  if(pickup >= 3)
   {
     CurrentState = DROPOFF;
   }
@@ -310,20 +296,21 @@ void FollowLine()
 
 void Dropoff()
 {
+
   switch(dropoff)
   {
 
     // delay until drop off point is detected
     case 0:
 
-      if((IR_Sensor_Status == ALL_BLACK) && (DistanceRight > MIN_DIST && DistanceRight < MAX_DIST))
+      if((IR_Sensor_Status == B111) && (DistanceRight > MIN_DIST && DistanceRight < MAX_DIST))
       {
-        Set_Motor_Currents(DROPOFF_SPD,DROPOFF_SPD);
-        delay(DROPOFF_DELAY);
+        Set_Motor_Currents(40,40);
+        delay(1500);
         dropoff = 1;
       }
 
-      break;
+    break;
 
     //reverse turning
     case 1:
@@ -331,40 +318,40 @@ void Dropoff()
       Turn_90_Anti_Clockwise();
       dropoff = 2;
 
-      break;
+    break;
 
     //reverse until 5cm away
     case 2:
 
-      Set_Motor_Currents(-NOMINAL_SPD, -NOMINAL_SPD);
+      Set_Motor_Currents(-120, -120);
 
-      if(DistanceBack <= DIST_TO_DROPOFF) //change DIST_TO_DROPOFF this for distance
+      if(DistanceBack <= 5) //change this for distance
       {
         Set_Motor_Currents(0,0);
         dropoff = 3;
       }
 
-      break;
+    break;
 
     //drop objects
     case 3:
-      //DropOffObject();
-      //add dropoff code here or call helper ^
+    //DropOffObject();
+    //add dropoff code here or call helper ^
     
     
-      dropoff = 4;
+    dropoff = 4;
       
-      break;
+    break;
 
     //move forward
     case 4:
 
-      Set_Motor_Currents(NOMINAL_SPD,NOMINAL_SPD);
+      Set_Motor_Currents(120,120);
       delay(300);
 
       dropoff = 5;
 
-      break;
+    break;
 
     //go back to line following
     case 5:
@@ -372,7 +359,7 @@ void Dropoff()
       Update_Direction(&LeftMotorSpeed,&RightMotorSpeed);
       Set_Motor_Currents(LeftMotorSpeed,RightMotorSpeed);
 
-      if(IR_Sensor_Status != NO_BLACK)
+      if(IR_Sensor_Status != B000)
       {
         dropoff = 0;
         visitedBins++;
@@ -391,55 +378,15 @@ void Dropoff()
 //STATE 4 go home
 void Home()
 {
-  const int Follow_Line = 1;
-  const int Turning = 2;
-  const int End = 3;
-  
-  //HomeState = End;
-  switch (HomeState) {
-  
-  case Follow_Line:
-    Update_Direction(&LeftMotorSpeed, &RightMotorSpeed);
-    Set_Motor_Currents(LeftMotorSpeed, RightMotorSpeed);
-    //if buggy has reached line turn onto line and stop at base line
-    if(IR_Sensor_Status == ALL_BLACK)
-    {
-      Set_Motor_Currents(0,0);
-      delay(BLK_CONFIRM_DELAY);
-      Calibrate_On_Line(BLK_LINE_TIMEOUT);
-      Set_Motor_Currents(NOMINAL_SPD,NOMINAL_SPD);
-      delay(TURN_DELAY);
-      HomeState = Turning;
-    }
-    break;
-  
-  case Turning:
-    //Turn right
-    Set_Motor_Currents(TURN_SPD,-TURN_SPD);
-    if (IR_Sensor_Status = B001) {
-      HomeState = Follow_Line;
-      if (HomeTurned) {
-        Set_Motor_Currents(TURN_SPD,-TURN_SPD);
-        if (IR_Sensor_Status = B001) {
-          HomeState = End;
-        }
-      }
-      HomeTurned = true;
-    }
-    break;
 
-  case End:
-    Update_Direction(&LeftMotorSpeed, &RightMotorSpeed);
-    Set_Motor_Currents(-RightMotorSpeed, -LeftMotorSpeed);
-    if (IR_Sensor_Status == ALL_BLACK) {
-      Set_Motor_Currents(0,0);
-      exit(0); // stop forever until reset or power cycled
-    }
-    break;
-
-  default: 
-    CurrentState = ERROR;
+  //if buggy has reacherd thick line, 180 then stop
+  if(IR_Sensor_Status == B111)
+  {
+    Set_Motor_Currents(0,0);
+    Turn_180();
+    while(1); // stop forever
   }
+ 
 }
 
 
@@ -456,26 +403,26 @@ void Obstacle()
       if(DistanceFront > MIN_DIST && DistanceFront < MAX_DIST)
       {
         Set_Motor_Currents(0,0);
-        Beep(NUM_BEEPS); 
-        delay(OBSTACLE_DELAY);
-        Beep(NUM_BEEPS);
-        Set_Motor_Currents(-OBSTACLE_SPD,-OBSTACLE_SPD);
-        delay(OBSTACLE_DELAY);
+        Beep(2); //requesting clearance
+        delay(2000);
+        Beep(3);
+        Set_Motor_Currents(-40,-40);
+        delay(2000);
 
         Turn_90_Anti_Clockwise(); // face alongside object
         obstacleStage = 1;
       }
 
-      break;
+    break;
 
     //following side of obstacle
     case 1:
 
       //wall following
       //if obstacle within range
-      if(DistanceRight > 8 && DistanceRight < 12) //Maybe use abs()<<<<<<<<<<<<<<<<<<<<<
+      if(DistanceRight > 8 && DistanceRight < 12)
       {
-        Set_Motor_Currents(50,50);
+      Set_Motor_Currents(50,50);
       }
       else if(DistanceRight < 8) //turn left too close
       {
@@ -500,7 +447,7 @@ void Obstacle()
       Set_Motor_Currents(LeftMotorSpeed,RightMotorSpeed);
 
       //if line is detected go abck to pickup state
-      if(IR_Sensor_Status != NO_BLACK)
+      if(IR_Sensor_Status != B000)
       {
         obstacleStage = 0; // reset
         CurrentState = FOLLOW_LINE;
@@ -508,12 +455,6 @@ void Obstacle()
 
       break;
   }
-}
-
-void Error() {
-  Set_Motor_Currents(0,0);
-  Blink(ERROR_LED, BLINK_LENGTH);
-  Serial.print("Error");
 }
 
 // Supplementary functions
@@ -524,29 +465,5 @@ void Beep(int BeepNumber) {
   while (i < BeepNumber) {
     tone(BUZZ_PIN, BUZZ_FREQ, BUZZ_DURATION);
     i++;
-    delay(BEEP_PAUSE_TIME);
   }
-}
-
-void Blink(int LED_Pin, unsigned long BlinkLength) {
-  digitalWrite(LED_Pin, HIGH);
-  delay(BlinkLength),
-  digitalWrite(LED_Pin, LOW);
-  delay(BlinkLength);
-}
-
-void Calibrate_On_Line(unsigned long Timeout)  {
-  unsigned long t0 = millis();
-  unsigned long t1 = millis()+1;
-  while (t1-t0 <= Timeout) {
-    Serial.println(LeftMotorSpeed);
-    IR_Sensor_Status = Scan();
-    if (IR_Sensor_Status == ALL_BLACK) {
-      Set_Motor_Currents(0,0);
-      return;
-    }
-    t1 = millis();
-    Set_Motor_Currents(-LINE_CAL_SPD,-LINE_CAL_SPD);
-  }
-  Set_Motor_Currents(0,0);  
 }
