@@ -101,6 +101,17 @@ void Turn_130_Clockwise()
   Set_Motor_Currents(0,0);
 }
 
+//130 degree clockwise turn helper
+void Turn_130_Clockwise()
+{
+  //right forward left backward
+  Set_Motor_Currents(TURN_SPD, -TURN_SPD);
+  delay(UPDATE_130_DELAY); //might need adjusted
+
+  Set_Motor_Currents(0,0);
+}
+
+
 //180 degree turn helper
 void Turn_180()
 {
