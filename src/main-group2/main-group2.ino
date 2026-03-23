@@ -178,7 +178,6 @@ void setup() {
   digitalWrite(RUNNING_LED, HIGH); 
   //Setup up ir sensor pins
   if (!Setup_IR_Sensors(IR_Sensor_Pins, BUTTON, CALIBRATION_LED)) {
-    Serial.println("0");
     CurrentState = ERROR;
   } 
   digitalWrite(CALIBRATION_LED, LOW);
