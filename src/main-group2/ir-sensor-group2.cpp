@@ -37,7 +37,8 @@ int Error = 0;
 int ErrorLast = 0;
 int time1, press;
 
-bool Setup_IR_Sensors(int Arr[N_SENSORS], int ButtonPin) { // {Left, Middle, Right}
+bool Setup_IR_Sensors(int Arr[N_SENSORS], int ButtonPin, int LED) { // {Left, Middle, Right}
+  digitalWrite(LED, HIGH);
   for (int i = 0; i < N_SENSORS; i++) {IRPins[i] = Arr[i];}
   
   // Add in calibaration for Threshold. Example below
@@ -62,7 +63,7 @@ bool Setup_IR_Sensors(int Arr[N_SENSORS], int ButtonPin) { // {Left, Middle, Rig
     Threshold[i] = Threshold[i] - (int)BLACK_MARGIN_SHIFT;
     
     if (Threshold[i] <= BLACK_MARGIN_SHIFT) {
-    return 0;
+      return 0;
     }
   }
 
