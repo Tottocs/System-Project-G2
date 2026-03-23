@@ -1,5 +1,5 @@
 #ifndef FIRMWARE_VERSION
-#define FIRMWARE_VERSION "v.0.4" //Implementation of line following
+#define FIRMWARE_VERSION "v.0.5" //Implementation of line following
 #endif
 
 /*
@@ -69,6 +69,7 @@ int IR_Sensor_Pins[] = {A5,A4,A3};
 #define DROPOFF_DELAY 1500
 #define OBSTACLE_DELAY 2000
 #define BLK_CONFIRM_DELAY 50
+#define TURN_DELAY 700
 
 //Timout
 #define BLK_LINE_TIMEOUT 500UL 
@@ -89,6 +90,8 @@ int IR_Sensor_Pins[] = {A5,A4,A3};
 #define DROPOFF_SPD 40
 #define OBSTACLE_SPD 40
 #define LINE_CAL_SPD 100
+#define TURN_SPD 100
+#define HOME_SPD 80
  
 //Distances in cm
 #define DIST_TO_DROPOFF 5
@@ -111,9 +114,6 @@ bool turned90 = false;
 
 //180 degree turn checker
 bool turned180 = false;
-
-//state 5
-int obstacleStage = 0;
 
 //Motor speed variables
 int LeftMotorSpeed = 0;
@@ -138,6 +138,7 @@ int dropOff = 0;
 
 int ObjectDetected = 0;
 
+
 //states
 enum RobotState {
   ERROR = 0,
@@ -150,6 +151,11 @@ enum RobotState {
 };
 
 RobotState CurrentState = STARTING;
+
+int obstacleStage = 0;
+int HomeState = 1;
+bool HomeTurned = false;
+
 
 void setup() {
   //setup serial
@@ -170,14 +176,18 @@ void setup() {
 
   //Setup calibration
   pinMode(BUTTON, INPUT_PULLUP);
+  /*
+  Set_Motor_Currents(NOMINAL_SPD, NOMINAL_SPD);
+  delay(DRV_OFF_BLK_DEL);
+  */
 }
 
 void loop() {
   //Serial.println(CurrentState);
   if (CurrentState != ERROR) {
-    CurrentState = HOME;
-    
+    //CurrentState = HOME;  
   }
+  
   IR_Sensor_Status = Scan();
 
   switch(CurrentState)
@@ -338,15 +348,55 @@ void Dropoff()
 //STATE 4 go home
 void Home()
 {
+  const int Follow_Line = 1;
+  const int Turning = 2;
+  const int End = 3;
+  
+  //HomeState = End;
+  switch (HomeState) {
+  
+  case Follow_Line:
+    Update_Direction(&LeftMotorSpeed, &RightMotorSpeed);
+    Set_Motor_Currents(LeftMotorSpeed, RightMotorSpeed);
+    //if buggy has reached line turn onto line and stop at base line
+    if(IR_Sensor_Status == ALL_BLACK)
+    {
+      Set_Motor_Currents(0,0);
+      delay(BLK_CONFIRM_DELAY);
+      Calibrate_On_Line(BLK_LINE_TIMEOUT);
+      Set_Motor_Currents(NOMINAL_SPD,NOMINAL_SPD);
+      delay(TURN_DELAY);
+      HomeState = Turning;
+    }
+    break;
+  
+  case Turning:
+    //Turn right
+    Set_Motor_Currents(TURN_SPD,-TURN_SPD);
+    if (IR_Sensor_Status = B001) {
+      HomeState = Follow_Line;
+      if (HomeTurned) {
+        Set_Motor_Currents(TURN_SPD,-TURN_SPD);
+        if (IR_Sensor_Status = B001) {
+          HomeState = End;
+        }
+      }
+      HomeTurned = true;
+    }
+    break;
 
-  //if buggy has reacherd thick line, 180 then stop
-  if(IR_Sensor_Status == ALL_BLACK)
-  {
-    Set_Motor_Currents(0,0);
-    Turn_180();
-    exit(0); // stop forever until reset or power cycled
+  case End:
+    Update_Direction(&LeftMotorSpeed, &RightMotorSpeed);
+    Set_Motor_Currents(-RightMotorSpeed, -LeftMotorSpeed);
+    if (IR_Sensor_Status == ALL_BLACK) {
+      Set_Motor_Currents(0,0);
+      exit(0); // stop forever until reset or power cycled
+    }
+    break;
+
+  default: 
+    CurrentState = ERROR;
   }
- 
 }
 
 
@@ -418,6 +468,7 @@ void Obstacle()
 }
 
 void Error() {
+  Set_Motor_Currents(0,0);
   Blink(ERROR_LED, BLINK_LENGTH);
   Serial.print("Error");
 }
