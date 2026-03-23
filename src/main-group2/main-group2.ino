@@ -112,6 +112,9 @@ Servo door;
 //90 degree turn checker
 bool turned90 = false;
 
+//130 degree turn checker
+bool tunred130 = false;
+
 //180 degree turn checker
 bool turned180 = false;
 
@@ -132,6 +135,9 @@ int pickup = 0;
 int dropoff = 0;
 //
 int visitedBins = 0;
+
+//state 1
+int startStage = 0;
 
 //state 3
 int dropOff = 0;
@@ -223,13 +229,50 @@ void loop() {
 //STATE 1 go from charging point to line  
 void Starting()
 {
-  Set_Motor_Currents(STARTING_SPD,STARTING_SPD);
-  delay(DRV_OFF_BLK_DEL);
-  
-  if(IR_Sensor_Status != ALL_BLACK) {
-    CurrentState = FOLLOW_LINE;
+  switch(startStage)
+  {
+    // STEP 0
+    case 0:
+      Set_Motor_Currents(90,90);
+      delay(300);
+
+      if(IR_Sensor_Status != B000)
+      {
+        startStage = 1;
+      }
+    break;
+
+    // STEP 1 drive foward
+    case 1:
+      Update_Direction(&LeftMotorSpeed,&RightMotorSpeed);
+      Set_Motor_Currents(LeftMotorSpeed,RightMotorSpeed);
+      if(IR_Sensor_Status == B111)
+  {
+    Set_Motor_Currents(90,90);
+      delay(300);
+    startStage = 2;
+  }
+  break;
+
+    // STEP 2 turn right 
+     case 2:
+      digitalWrite(4,HIGH);
+      delay(500);
+      digitalWrite(4,LOW);
+      Set_Motor_Currents(0,0);
+
+      Turn_130_Clockwise();
+
+      startStage = 3;
+    break;
+
+    // STEP 3 next state
+    case 3:
+      CurrentState = FOLLOW_LINE;
+    break;
   }
 }
+
 
 //STATE 2 line following and pickup
 void FollowLine()
