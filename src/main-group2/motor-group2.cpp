@@ -17,9 +17,9 @@ Author: Torin Stanton-Andersson
 //Macro for dealing with percentage
 #define MULT_PERCENT(a,b) a*b/100
 
-#define UPDATE_90_DELAY 500
-#define UPDATE_180_DELAY 1000
-#define TURN_SPD 50
+#define UPDATE_90_DELAY 1000 //Needs changing
+#define UPDATE_180_DELAY 2400 //Needs changing
+#define TURN_SPD 100
 
 int _MOT_A1_PIN;
 int _MOT_A2_PIN;
