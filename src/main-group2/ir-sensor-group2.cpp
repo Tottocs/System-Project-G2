@@ -16,7 +16,7 @@ Edited By: Torin Stanton-Andersson
 #define N_SENSORS 3 //DO NOT EDIT
 #endif
 
-#define MAX_SPD 130 //Editable default = 180
+#define MAX_SPD 180 //Editable default = 180
 #define BLACK_MARGIN_SHIFT 200
 #define CAL_TIMEOUT 10000
 #define CAL_NUMBER 3
@@ -44,8 +44,7 @@ bool Setup_IR_Sensors(int Arr[N_SENSORS], int ButtonPin) { // {Left, Middle, Rig
   time1 = millis();
   press = digitalRead(ButtonPin);
   while (press == HIGH) { // Normally closed switch
-    //throw std::runtime_error("IR calibration timeout");
-    if (CAL_TIMEOUT <= (millis() - time1)) {return 0;}
+    if (CAL_TIMEOUT <= (millis() - time1)) return 0;
     press = digitalRead(ButtonPin);
   } 
   
@@ -61,12 +60,12 @@ bool Setup_IR_Sensors(int Arr[N_SENSORS], int ButtonPin) { // {Left, Middle, Rig
       delay(10);
       }
     Threshold[i] = Threshold[i] - (int)BLACK_MARGIN_SHIFT;
+    
+    if (Threshold[i] <= BLACK_MARGIN_SHIFT) {
+    return 0;
+    }
   }
-  /*
-  if (Threshold < BLACK_MARGIN_SHIFT) {
-    throw std::runtime_error("IR sensor threshold too low - Recalibrate please");
-  }
-  */
+
   return 1;
 }
 

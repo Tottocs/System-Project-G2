@@ -28,7 +28,7 @@ Optional:
 #include <Servo.h>
 
 //UART only needed for debugging and or comunication between chips. Will slow the arduino computation
-#define SERIAL_STATUS false // set false for field operation
+#define SERIAL_STATUS true // set false for field operation
 #define UART_BAUDRATE 9600 //might need to be changed
 
 // PINS
@@ -48,7 +48,7 @@ Optional:
 #define BUTTON 7 // Change
 
 //Debug LEDs
-#define ERROR_LED LED_BUILTIN
+#define ERROR_LED 4
 
 int IR_Sensor_Pins[] = {A5,A4,A3};
 
@@ -72,7 +72,7 @@ int IR_Sensor_Pins[] = {A5,A4,A3};
 
 //Timout
 #define BLK_LINE_TIMEOUT 500UL 
-#define BLINK_LENGTH 500UL
+#define BLINK_LENGTH 500
 
 //Buzzer
 #define BUZZ_FREQ 3000
@@ -88,7 +88,7 @@ int IR_Sensor_Pins[] = {A5,A4,A3};
 #define STARTING_SPD 80
 #define DROPOFF_SPD 40
 #define OBSTACLE_SPD 40
-#define LINE_CAL_SPD 60
+#define LINE_CAL_SPD 100
  
 //Distances in cm
 #define DIST_TO_DROPOFF 5
@@ -173,8 +173,10 @@ void setup() {
 }
 
 void loop() {
+  //Serial.println(CurrentState);
   if (CurrentState != ERROR) {
-  CurrentState = FOLLOW_LINE;
+    CurrentState = HOME;
+    
   }
   IR_Sensor_Status = Scan();
 
@@ -182,24 +184,22 @@ void loop() {
   {
 
     case STARTING:
-      Starting();
-    break;
+      Starting();   break;
 
     case FOLLOW_LINE:
-      FollowLine();
-    break;
+      FollowLine(); break;
 
     case DROPOFF:
-      Dropoff();
-    break;
+      Dropoff();    break;
 
     case HOME:
-      Home();
-    break;
+      Home();       break;
 
     case OBSTACLE:
-      Obstacle();
-    break;
+      Obstacle();   break;
+
+    case ERROR:
+      Error();      break;
 
     default:
       CurrentState = ERROR;
@@ -224,7 +224,6 @@ void Starting()
 //STATE 2 line following and pickup
 void FollowLine()
 {
-
   if(DistanceFront > MIN_DIST && DistanceFront < MAX_DIST)
   {
     CurrentState = OBSTACLE;
@@ -232,14 +231,12 @@ void FollowLine()
   }
 
   Update_Direction(&LeftMotorSpeed,&RightMotorSpeed);
-
-  if (LeftMotorSpeed == 0 && RightMotorSpeed == 0) {
-    Set_Motor_Currents(LeftMotorSpeed,RightMotorSpeed);
+  Set_Motor_Currents(LeftMotorSpeed,RightMotorSpeed);
+  if (IR_Sensor_Status == ALL_BLACK) {
+    Set_Motor_Currents(0,0);
     delay(BLK_CONFIRM_DELAY);
     Calibrate_On_Line(BLK_LINE_TIMEOUT);
   }
-
-
 
   if(ObjectDetected)
   {
@@ -422,6 +419,7 @@ void Obstacle()
 
 void Error() {
   Blink(ERROR_LED, BLINK_LENGTH);
+  Serial.print("Error");
 }
 
 // Supplementary functions
@@ -437,23 +435,24 @@ void Beep(int BeepNumber) {
 }
 
 void Blink(int LED_Pin, unsigned long BlinkLength) {
-  unsigned long t0 = millis();
-  unsigned long t1 = millis();
-  while (t1-t0 >= BlinkLength) {
-    t1 = millis();
-    digitalWrite(LED_Pin, HIGH);
-    }
+  digitalWrite(LED_Pin, HIGH);
+  delay(BlinkLength),
   digitalWrite(LED_Pin, LOW);
+  delay(BlinkLength);
 }
 
 void Calibrate_On_Line(unsigned long Timeout)  {
   unsigned long t0 = millis();
-  unsigned long t1 = millis();
-  IR_Sensor_Status = Scan();
-  if (IR_Sensor_Status != ALL_BLACK) {
-    while (t1-t0 >= Timeout) {
-      t1 = millis();
-      Set_Motor_Currents(-LINE_CAL_SPD,-LINE_CAL_SPD);
+  unsigned long t1 = millis()+1;
+  while (t1-t0 <= Timeout) {
+    Serial.println(LeftMotorSpeed);
+    IR_Sensor_Status = Scan();
+    if (IR_Sensor_Status == ALL_BLACK) {
+      Set_Motor_Currents(0,0);
+      return;
     }
-  }  
+    t1 = millis();
+    Set_Motor_Currents(-LINE_CAL_SPD,-LINE_CAL_SPD);
+  }
+  Set_Motor_Currents(0,0);  
 }
