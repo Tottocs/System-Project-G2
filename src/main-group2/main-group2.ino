@@ -34,7 +34,7 @@ Optional:
 // PINS
 //---------------------------------
 //Servo pins
-#define PWM_SERVO_PIN 6 //Needs to be changed
+#define DOOR_PIN 11
 
 //Motor pins
 #define MOT_A1_PIN 5
@@ -49,6 +49,8 @@ Optional:
 
 //Debug LEDs
 #define ERROR_LED 4
+#define CALIBRATION_LED 8
+#define RUNNING_LED 12
 
 int IR_Sensor_Pins[] = {A5,A4,A3};
 
@@ -99,6 +101,8 @@ int IR_Sensor_Pins[] = {A5,A4,A3};
 //Line following
 #define ALL_BLACK B111
 #define NO_BLACK B000
+
+#define LM_CORRECTION 100
 
 // OBJECTS
 // --------------------------------------
@@ -151,13 +155,15 @@ enum RobotState {
   STARTING = 1,
   FOLLOW_LINE = 2,
   DROPOFF = 3,
-  HOME = 4,
-  OBSTACLE = 5,
-  FINISHED = 6
+  PICKUP = 4,
+  HOME = 5,
+  OBSTACLE = 6,
+  FINISHED = 7
 };
 
 RobotState CurrentState = STARTING;
 
+int startStage = 0;
 int obstacleStage = 0;
 int HomeState = 1;
 bool HomeTurned = false;
@@ -171,17 +177,25 @@ void setup() {
   //Button for calibration
   pinMode(BUTTON, INPUT_PULLUP);
 
-  //Setup up ir sensor pins
-  if (!Setup_IR_Sensors(IR_Sensor_Pins, BUTTON)) {
-    CurrentState = ERROR;
-  } 
+  //Debug LEDs
+  pinMode(ERROR_LED, OUTPUT);
+  pinMode(CALIBRATION_LED, OUTPUT);
+  pinMode(RUNNING_LED, OUTPUT);
+
+  //Servo setup
+  door.attach(DOOR_PIN);
 
   //Setup main motor pins
   Setup_Main_Motors(MOT_A1_PIN, MOT_A2_PIN, 
                     MOT_B1_PIN, MOT_B2_PIN);
 
-  //Setup calibration
-  pinMode(BUTTON, INPUT_PULLUP);
+  digitalWrite(RUNNING_LED, HIGH); 
+  //Setup up ir sensor pins
+  if (!Setup_IR_Sensors(IR_Sensor_Pins, BUTTON, CALIBRATION_LED)) {
+    CurrentState = ERROR;
+  } 
+  digitalWrite(CALIBRATION_LED, LOW);
+
   /*
   Set_Motor_Currents(NOMINAL_SPD, NOMINAL_SPD);
   delay(DRV_OFF_BLK_DEL);
@@ -190,8 +204,8 @@ void setup() {
 
 void loop() {
   //Serial.println(CurrentState);
-  if (CurrentState != ERROR) {
-    //CurrentState = HOME;  
+  if (CurrentState != ERROR) { // Testing
+     //CurrentState = DROPOFF;  
   }
   
   IR_Sensor_Status = Scan();
@@ -207,6 +221,9 @@ void loop() {
 
     case DROPOFF:
       Dropoff();    break;
+
+    case PICKUP:
+      Pickup();     break;
 
     case HOME:
       Home();       break;
@@ -310,6 +327,7 @@ void FollowLine()
 
 void Dropoff()
 {
+  dropoff = 0;
   switch(dropoff)
   {
 
@@ -342,6 +360,7 @@ void Dropoff()
       {
         Set_Motor_Currents(0,0);
         dropoff = 3;
+
       }
 
       break;
@@ -387,6 +406,9 @@ void Dropoff()
   }
 }
 
+void Pickup() {
+  
+}
 
 //STATE 4 go home
 void Home()
@@ -407,7 +429,7 @@ void Home()
       Set_Motor_Currents(0,0);
       delay(BLK_CONFIRM_DELAY);
       Calibrate_On_Line(BLK_LINE_TIMEOUT);
-      Set_Motor_Currents(NOMINAL_SPD,NOMINAL_SPD);
+      Set_Motor_Currents(NOMINAL_SPD*LM_CORRECTION/100,NOMINAL_SPD);
       delay(TURN_DELAY);
       HomeState = Turning;
     }
@@ -415,11 +437,11 @@ void Home()
   
   case Turning:
     //Turn right
-    Set_Motor_Currents(TURN_SPD,-TURN_SPD);
+    Set_Motor_Currents(TURN_SPD*LM_CORRECTION/100,-TURN_SPD);
     if (IR_Sensor_Status = B001) {
       HomeState = Follow_Line;
       if (HomeTurned) {
-        Set_Motor_Currents(TURN_SPD,-TURN_SPD);
+        Set_Motor_Currents(TURN_SPD*LM_CORRECTION/100,-TURN_SPD);
         if (IR_Sensor_Status = B001) {
           HomeState = End;
         }
@@ -512,8 +534,10 @@ void Obstacle()
 
 void Error() {
   Set_Motor_Currents(0,0);
+  digitalWrite(RUNNING_LED, LOW);
+  digitalWrite(CALIBRATION_LED, LOW);
   Blink(ERROR_LED, BLINK_LENGTH);
-  Serial.print("Error");
+  //Serial.print("Error");
 }
 
 // Supplementary functions
