@@ -34,7 +34,7 @@ Optional:
 // PINS
 //---------------------------------
 //Servo pins
-#define PWM_SERVO_PIN 6 //Needs to be changed
+#define DOOR_PIN 11
 
 //Motor pins
 #define MOT_A1_PIN 5
@@ -50,7 +50,7 @@ Optional:
 //Debug LEDs
 #define ERROR_LED 4
 #define CALIBRATION_LED 8
-#define RUNNING_LED 11
+#define RUNNING_LED 12
 
 int IR_Sensor_Pins[] = {A5,A4,A3};
 
@@ -149,9 +149,10 @@ enum RobotState {
   STARTING = 1,
   FOLLOW_LINE = 2,
   DROPOFF = 3,
-  HOME = 4,
-  OBSTACLE = 5,
-  FINISHED = 6
+  PICKUP = 4,
+  HOME = 5,
+  OBSTACLE = 6,
+  FINISHED = 7
 };
 
 RobotState CurrentState = STARTING;
@@ -175,16 +176,19 @@ void setup() {
   pinMode(CALIBRATION_LED, OUTPUT);
   pinMode(RUNNING_LED, OUTPUT);
 
+  //Servo setup
+  door.attach(DOOR_PIN);
+
+  //Setup main motor pins
+  Setup_Main_Motors(MOT_A1_PIN, MOT_A2_PIN, 
+                    MOT_B1_PIN, MOT_B2_PIN);
+
   digitalWrite(RUNNING_LED, HIGH); 
   //Setup up ir sensor pins
   if (!Setup_IR_Sensors(IR_Sensor_Pins, BUTTON, CALIBRATION_LED)) {
     CurrentState = ERROR;
   } 
   digitalWrite(CALIBRATION_LED, LOW);
-
-  //Setup main motor pins
-  Setup_Main_Motors(MOT_A1_PIN, MOT_A2_PIN, 
-                    MOT_B1_PIN, MOT_B2_PIN);
 
   /*
   Set_Motor_Currents(NOMINAL_SPD, NOMINAL_SPD);
@@ -195,7 +199,7 @@ void setup() {
 void loop() {
   //Serial.println(CurrentState);
   if (CurrentState != ERROR) { // Testing
-     //CurrentState = STARTING;  
+     //CurrentState = DROPOFF;  
   }
   
   IR_Sensor_Status = Scan();
@@ -211,6 +215,9 @@ void loop() {
 
     case DROPOFF:
       Dropoff();    break;
+
+    case PICKUP:
+      Pickup();     break;
 
     case HOME:
       Home();       break;
@@ -313,6 +320,7 @@ void FollowLine()
 
 void Dropoff()
 {
+  dropoff = 0;
   switch(dropoff)
   {
 
@@ -345,6 +353,7 @@ void Dropoff()
       {
         Set_Motor_Currents(0,0);
         dropoff = 3;
+
       }
 
       break;
@@ -390,6 +399,9 @@ void Dropoff()
   }
 }
 
+void Pickup() {
+  
+}
 
 //STATE 4 go home
 void Home()
