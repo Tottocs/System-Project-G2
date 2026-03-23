@@ -100,6 +100,8 @@ int IR_Sensor_Pins[] = {A5,A4,A3};
 #define ALL_BLACK B111
 #define NO_BLACK B000
 
+#define LM_CORRECTION 100
+
 // OBJECTS
 // --------------------------------------
 Servo arm; // Add servo names
@@ -184,8 +186,8 @@ void setup() {
 
 void loop() {
   //Serial.println(CurrentState);
-  if (CurrentState != ERROR) {
-    //CurrentState = HOME;  
+  if (CurrentState != ERROR) { // Testing
+     //CurrentState = HOME;  
   }
   
   IR_Sensor_Status = Scan();
@@ -364,7 +366,7 @@ void Home()
       Set_Motor_Currents(0,0);
       delay(BLK_CONFIRM_DELAY);
       Calibrate_On_Line(BLK_LINE_TIMEOUT);
-      Set_Motor_Currents(NOMINAL_SPD,NOMINAL_SPD);
+      Set_Motor_Currents(NOMINAL_SPD*LM_CORRECTION/100,NOMINAL_SPD);
       delay(TURN_DELAY);
       HomeState = Turning;
     }
@@ -372,11 +374,11 @@ void Home()
   
   case Turning:
     //Turn right
-    Set_Motor_Currents(TURN_SPD,-TURN_SPD);
+    Set_Motor_Currents(TURN_SPD*LM_CORRECTION/100,-TURN_SPD);
     if (IR_Sensor_Status = B001) {
       HomeState = Follow_Line;
       if (HomeTurned) {
-        Set_Motor_Currents(TURN_SPD,-TURN_SPD);
+        Set_Motor_Currents(TURN_SPD*LM_CORRECTION/100,-TURN_SPD);
         if (IR_Sensor_Status = B001) {
           HomeState = End;
         }
