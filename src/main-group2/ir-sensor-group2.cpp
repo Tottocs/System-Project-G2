@@ -16,13 +16,13 @@ Edited By: Torin Stanton-Andersson
 #define N_SENSORS 3 //DO NOT EDIT
 #endif
 
-#define MAX_SPD 180 //Editable default = 180
+#define MAX_SPD 130 //Editable default = 180
 #define BLACK_MARGIN_SHIFT 200
 #define CAL_TIMEOUT 10000
 #define CAL_NUMBER 3
 
-#define SMALL_CHANGE 40 // Default 40
-#define LARGE_CHANGE 80 // Default 80
+#define SMALL_CHANGE 20 // Default 40
+#define LARGE_CHANGE 50 // Default 80
 #define OFF_TRACK 120   // Default 120
 
 //sensors
