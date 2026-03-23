@@ -18,6 +18,7 @@ Author: Torin Stanton-Andersson
 #define MULT_PERCENT(a,b) a*b/100
 
 #define UPDATE_90_DELAY 1000 //Needs changing
+#define UPDATE_130_DELAY 1000
 #define UPDATE_180_DELAY 2400 //Needs changing
 #define TURN_SPD 100
 
@@ -86,6 +87,16 @@ void Turn_90_Clockwise()
   //right forward left backward
   Set_Motor_Currents(-TURN_SPD, TURN_SPD);
   delay(UPDATE_90_DELAY); //might need adjusted
+
+  Set_Motor_Currents(0,0);
+}
+
+//130 degree clockwise turn helper
+void Turn_130_Clockwise()
+{
+  //right forward left backward
+  Set_Motor_Currents(TURN_SPD, -TURN_SPD);
+  delay(UPDATE_130_DELAY); //might need adjusted
 
   Set_Motor_Currents(0,0);
 }
