@@ -5,6 +5,7 @@
 #define ECHO_PIN 2 //Echo pin from ultrasonic sensor
 #define TRIG_PIN 7 //Trig pin to ultrasonic sensor
 #define TRIG_PULSE_LENGTH 10
+#include <Wire.h>
 #define PULSE_IN_TIMEOUT 30000UL
 
 //#define USE_FLOAT
@@ -44,7 +45,7 @@ void loop() {
   #endif
   //Distance = (PulseDuration/10000)*171;
   Distance = (PulseDuration*171)/10000;
-  
+  write(Distance);
   Serial.print("Pulse:");
   Serial.print(PulseDuration);
   Serial.print(" Distance:");
