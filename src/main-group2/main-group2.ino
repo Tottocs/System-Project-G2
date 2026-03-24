@@ -24,7 +24,7 @@ Optional:
 #include "include/ir-sensor-group2.h"
 #include "include/motor-group2.h"
 
-//Including online libraries 
+//Including online libraries
 #include <Servo.h>
 
 //UART only needed for debugging and or comunication between chips. Will slow the arduino computation
@@ -34,23 +34,23 @@ Optional:
 // PINS
 //---------------------------------
 //Servo pins
-#define DOOR_PIN 11
+#define DOOR_PIN 9
 
 //Motor pins
-#define MOT_A1_PIN 5
-#define MOT_A2_PIN 6
-#define MOT_B1_PIN 9
-#define MOT_B2_PIN 10
+#define MOT_A1_PIN 5 // IN2
+#define MOT_A2_PIN 6 // IN1
+#define MOT_B1_PIN 11 // IN3
+#define MOT_B2_PIN 3 // IN4
 
-#define BUZZ_PIN 9
+#define BUZZ_PIN 3
 
 //Peripheral 
-#define BUTTON 7 // Change
+#define BUTTON 7
 
 //Debug LEDs
 #define ERROR_LED 4
 #define CALIBRATION_LED 8
-#define RUNNING_LED 12
+#define RUNNING_LED 13
 
 int IR_Sensor_Pins[] = {A5,A4,A3};
 
@@ -89,8 +89,8 @@ int IR_Sensor_Pins[] = {A5,A4,A3};
 //Speeds
 #define NOMINAL_SPD 120
 #define STARTING_SPD 80
-#define DROPOFF_SPD 40
-#define OBSTACLE_SPD 40
+#define DROPOFF_SPD 80
+#define OBSTACLE_SPD 80
 #define LINE_CAL_SPD 100
 #define TURN_SPD 100
 #define HOME_SPD 80
@@ -102,13 +102,12 @@ int IR_Sensor_Pins[] = {A5,A4,A3};
 #define ALL_BLACK B111
 #define NO_BLACK B000
 
-#define LM_CORRECTION 100
+#define LM_CORRECTION 100 // Left motor correction
 
 // OBJECTS
 // --------------------------------------
 Servo arm; // Add servo names
 Servo door;
-//Servo scanner;
 
 // VARIABLES
 //---------------------------------------
@@ -137,11 +136,9 @@ volatile int IR_Sensor_Status = B000;
 //pickup and dropoff
 int pickup = 0;
 int dropoff = 0;
+
 //
 int visitedBins = 0;
-
-//state 1
-int startStage = 0;
 
 //state 3
 int dropOff = 0;
@@ -185,10 +182,6 @@ void setup() {
   //Servo setup
   door.attach(DOOR_PIN);
 
-  //Setup main motor pins
-  Setup_Main_Motors(MOT_A1_PIN, MOT_A2_PIN, 
-                    MOT_B1_PIN, MOT_B2_PIN);
-
   digitalWrite(RUNNING_LED, HIGH); 
   //Setup up ir sensor pins
   if (!Setup_IR_Sensors(IR_Sensor_Pins, BUTTON, CALIBRATION_LED)) {
@@ -196,16 +189,21 @@ void setup() {
   } 
   digitalWrite(CALIBRATION_LED, LOW);
 
-  /*
-  Set_Motor_Currents(NOMINAL_SPD, NOMINAL_SPD);
-  delay(DRV_OFF_BLK_DEL);
-  */
+  //Setup main motor pins
+  Setup_Main_Motors(MOT_A1_PIN, MOT_A2_PIN, 
+                    MOT_B1_PIN, MOT_B2_PIN);
+
+  //Set_Motor_Currents(NOMINAL_SPD, NOMINAL_SPD);
+  //delay(3000); 
+  
 }
 
 void loop() {
   //Serial.println(CurrentState);
+
+  
   if (CurrentState != ERROR) { // Testing
-     //CurrentState = DROPOFF;  
+     CurrentState = HOME;  
   }
   
   IR_Sensor_Status = Scan();
@@ -238,6 +236,7 @@ void loop() {
       CurrentState = ERROR;
   }
   //delay(REFRESH_RATE); //might get rid
+  
 }
 
 // State functions
@@ -407,7 +406,7 @@ void Dropoff()
 }
 
 void Pickup() {
-  
+
 }
 
 //STATE 4 go home
@@ -438,11 +437,11 @@ void Home()
   case Turning:
     //Turn right
     Set_Motor_Currents(TURN_SPD*LM_CORRECTION/100,-TURN_SPD);
-    if (IR_Sensor_Status = B001) {
+    if (IR_Sensor_Status == B001) {
       HomeState = Follow_Line;
       if (HomeTurned) {
         Set_Motor_Currents(TURN_SPD*LM_CORRECTION/100,-TURN_SPD);
-        if (IR_Sensor_Status = B001) {
+        if (IR_Sensor_Status == B001) {
           HomeState = End;
         }
       }

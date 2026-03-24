@@ -12,7 +12,7 @@ Author: Torin Stanton-Andersson
 #define SERIAL_STATUS false
 
 //Correction for the left servo, taken from calibration
-#define MOTOR_CORRECT_PERCENT 127 
+#define MOTOR_CORRECT_PERCENT 100 
 
 //Macro for dealing with percentage
 #define MULT_PERCENT(a,b) a*b/100
