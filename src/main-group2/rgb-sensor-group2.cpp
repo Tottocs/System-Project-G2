@@ -1,6 +1,9 @@
 #include "include/rgb-sensor-group2.h" 
 
 #define SERIAL_STATUS false
+#define R 1
+#define G 2
+#define B 3
 
 RgbSensor::RgbSensor() 
   : tcs(TCS34725_INTEGRATIONTIME_614MS, TCS34725_GAIN_16X) {}
@@ -47,18 +50,18 @@ char RgbSensor::detectDominantColor() {
     float g_scaled = gAvg * G_SCALING_FACTOR;
     float b_scaled = bAvg * B_SCALING_FACTOR;
     if ((r_scaled > g_scaled * THRESHOLD_FACTOR) && (r_scaled > b_scaled * THRESHOLD_FACTOR)) {
-        return "R";
+        return R;
     } 
     else if ((g_scaled > r_scaled * THRESHOLD_FACTOR) && (g_scaled > b_scaled * THRESHOLD_FACTOR)) {
-        return "G";
+        return G;
     } 
     else if ((b_scaled > r_scaled * THRESHOLD_FACTOR) && (b_scaled > g_scaled * THRESHOLD_FACTOR)) {
-        return "B";
+        return B;
     }
 
-    return "N";
+    return 0;
 }
-
+/*
 void RgbSensor::update() {
     float rAvg, gAvg, bAvg;
     readAverages(rAvg, gAvg, bAvg);
@@ -81,3 +84,4 @@ void RgbSensor::update() {
 
     delay(LOOP_DELAY_MS);
 }
+*/

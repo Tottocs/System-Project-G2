@@ -18,7 +18,7 @@ Author: Torin Stanton-Andersson
 #define MULT_PERCENT(a,b) a*b/100
 
 #define UPDATE_90_DELAY 1000 //Needs changing
-#define UPDATE_130_DELAY 1000
+#define UPDATE_130_DELAY 1600
 #define UPDATE_180_DELAY 2400 //Needs changing
 #define TURN_SPD 100
 
@@ -75,7 +75,7 @@ void Set_Motor_Currents(int pwm_A, int pwm_B) {
 void Turn_90_Anti_Clockwise()
 {
   //left forward right backward
-  Set_Motor_Currents(TURN_SPD, -TURN_SPD);
+  Set_Motor_Currents(-TURN_SPD, TURN_SPD);
   delay(UPDATE_90_DELAY); //might need adjusted
 
   Set_Motor_Currents(0,0);
@@ -85,7 +85,7 @@ void Turn_90_Anti_Clockwise()
 void Turn_90_Clockwise()
 {
   //right forward left backward
-  Set_Motor_Currents(-TURN_SPD, TURN_SPD);
+  Set_Motor_Currents(TURN_SPD, -TURN_SPD);
   delay(UPDATE_90_DELAY); //might need adjusted
 
   Set_Motor_Currents(0,0);
