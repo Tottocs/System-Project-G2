@@ -11,7 +11,7 @@ public:
 
     int begin();
     char detectDominantColor();    
-    void update();
+    //void update();
 
 private:
     // Sensor
