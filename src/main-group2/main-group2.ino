@@ -24,6 +24,7 @@ Optional:
 #include "include/ir-sensor-group2.h"
 #include "include/motor-group2.h"
 #include "include/rgb-sensor-group2.h"
+#include "include/door-group2.h"
 
 //Including online libraries
 #include <Servo.h>
@@ -64,6 +65,9 @@ int IR_Sensor_Pins[] = {A5,A4,A3};
 
 //Number of rubiish objects to pick up
 #define N_OBJECTS 3
+
+#define DOOR_OPEN_STATE 1
+#define DOOR_CLOSED_STATE 0
 
 //Delays in ms
 #define START_DELAY 1000
@@ -363,7 +367,7 @@ void Dropoff()
 
     // Drop objects
     case 3:
-      setDropoff(1);   // OPEN DOOR
+      setDropoff(door, DOOR_OPEN_STATE);   // OPEN DOOR
       delay(500);      // allow servo to move
       dropoff = 4;
       break;
@@ -377,7 +381,7 @@ void Dropoff()
 
     // Close door + return to line following
     case 5:
-      setDropoff(0);   // CLOSE DOOR
+      setDropoff(door, DOOR_CLOSED_STATE);   // CLOSE DOOR
 
       Update_Direction(&LeftMotorSpeed, &RightMotorSpeed);
       Set_Motor_Currents(LeftMotorSpeed, RightMotorSpeed);
@@ -385,7 +389,7 @@ void Dropoff()
       if(IR_Sensor_Status != NO_BLACK)
       {
         dropoff = 0;
-        CurrentState = LINE_FOLLOWING;
+        CurrentState = FOLLOW_LINE;
       }
       break;
   }
