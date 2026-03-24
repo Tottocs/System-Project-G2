@@ -3,7 +3,7 @@
 #endif
 
 /*
-Authors: Lucy Grierson, Torin Stanton-Andersson
+Authors: Lucy Grierson, Torin Stanton-Andersson, Ben Albeson
 
 [] Ultrasonic Sensor
 [] RGB Sensor
