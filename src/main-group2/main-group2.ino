@@ -3,7 +3,7 @@
 #endif
 
 /*
-Authors: Lucy Grierson, Torin Stanton-Andersson
+Authors: Lucy Grierson, Torin Stanton-Andersson, Ben Albeson
 
 [] Ultrasonic Sensor
 [] RGB Sensor
@@ -329,79 +329,64 @@ void Dropoff()
   dropoff = 0;
   switch(dropoff)
   {
-
-    // delay until drop off point is detected
+    // Detect drop-off area and move slightly forward
     case 0:
-
-      if((IR_Sensor_Status == ALL_BLACK) && (DistanceRight > MIN_DIST && DistanceRight < MAX_DIST))
+      if((IR_Sensor_Status == ALL_BLACK) && 
+         (DistanceRight > MIN_DIST && DistanceRight < MAX_DIST))
       {
-        Set_Motor_Currents(DROPOFF_SPD,DROPOFF_SPD);
+        Set_Motor_Currents(DROPOFF_SPD, DROPOFF_SPD);
         delay(DROPOFF_DELAY);
+
+        Set_Motor_Currents(0, 0);
         dropoff = 1;
       }
-
       break;
 
-    //reverse turning
+    // Turn so the back faces the bin
     case 1:
-
       Turn_90_Anti_Clockwise();
       dropoff = 2;
-
       break;
 
-    //reverse until 5cm away
+    // Reverse until rear sensor detects bin
     case 2:
-
       Set_Motor_Currents(-NOMINAL_SPD, -NOMINAL_SPD);
 
-      if(DistanceBack <= DIST_TO_DROPOFF) //change DIST_TO_DROPOFF this for distance
+      if (DistanceBack <= DIST_TO_DROPOFF)  // bin detected
       {
-        Set_Motor_Currents(0,0);
+        Set_Motor_Currents(0, 0);
         dropoff = 3;
 
       }
-
       break;
 
-    //drop objects
+    // Drop objects
     case 3:
-      //DropOffObject();
-      //add dropoff code here or call helper ^
-    
-    
+      setDropoff(1);   // OPEN DOOR
+      delay(500);      // allow servo to move
       dropoff = 4;
-      
       break;
 
-    //move forward
+    // Move forward away from bin
     case 4:
-
-      Set_Motor_Currents(NOMINAL_SPD,NOMINAL_SPD);
+      Set_Motor_Currents(NOMINAL_SPD, NOMINAL_SPD);
       delay(300);
-
       dropoff = 5;
-
       break;
 
-    //go back to line following
+    // Close door + return to line following
     case 5:
+      setDropoff(0);   // CLOSE DOOR
 
-      Update_Direction(&LeftMotorSpeed,&RightMotorSpeed);
-      Set_Motor_Currents(LeftMotorSpeed,RightMotorSpeed);
+      Update_Direction(&LeftMotorSpeed, &RightMotorSpeed);
+      Set_Motor_Currents(LeftMotorSpeed, RightMotorSpeed);
 
       if(IR_Sensor_Status != NO_BLACK)
       {
         dropoff = 0;
-        visitedBins++;
-
-        if(visitedBins >= 3)
-        {
-          CurrentState = HOME;
-        }
+        CurrentState = LINE_FOLLOWING;
       }
-
-    break;
+      break;
   }
 }
 
