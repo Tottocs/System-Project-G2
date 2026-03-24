@@ -54,7 +54,7 @@ Optional:
 #define CALIBRATION_LED 8
 #define RUNNING_LED 13
 
-int IR_Sensor_Pins[] = {A5,A4,A3};
+int IR_Sensor_Pins[3] = {A3,A2,A1};
 int positions[4] = {20, 80, 130, 170};// [0]=pickup, [1-3]=bins
 #define CRANE_SERVO_PIN 10 // change to free pin
 
@@ -75,7 +75,7 @@ int positions[4] = {20, 80, 130, 170};// [0]=pickup, [1-3]=bins
 //Delays in ms
 #define START_DELAY 1000
 #define DRV_OFF_BLK_DEL 500
-#define BASE_DELAY 400
+#define BASE_DELAY 700
 #define DROPOFF_DELAY 1500
 #define OBSTACLE_DELAY 2000
 #define BLK_CONFIRM_DELAY 50
@@ -225,9 +225,7 @@ void setup() {
                     MOT_B1_PIN, MOT_B2_PIN);
 
   //Setup rgb sensor
-  if (!rgbSensor.begin()) {
-    CurrentState = ERROR;
-  }
+  rgbSensor.begin();
   //Set_Motor_Currents(NOMINAL_SPD, NOMINAL_SPD);
   //delay(3000); 
 
@@ -243,7 +241,6 @@ void loop() {
   }
   
   IR_Sensor_Status = Scan();
-
   switch(CurrentState)
   {
 
@@ -285,43 +282,32 @@ void Starting()
   {
     // STEP 0
     case 0:
-      Set_Motor_Currents(90,90);
-      delay(300);
-
-      if(IR_Sensor_Status != B000)
-      {
-        startStage = 1;
-      }
-    break;
-
-    // STEP 1 drive foward
+      Set_Motor_Currents(STARTING_SPD,STARTING_SPD);
+      delay(BASE_DELAY);
+      startStage = 1;
+      break;
     case 1:
+
       Update_Direction(&LeftMotorSpeed,&RightMotorSpeed);
       Set_Motor_Currents(LeftMotorSpeed,RightMotorSpeed);
       if(IR_Sensor_Status == B111)
-  {
-    Set_Motor_Currents(90,90);
-      delay(300);
-    startStage = 2;
-  }
-  break;
+      { 
+        Set_Motor_Currents(STARTING_SPD,STARTING_SPD);
+        delay(BASE_DELAY);
+        startStage = 2;
+      }
+      break;
 
     // STEP 2 turn right 
      case 2:
-      digitalWrite(4,HIGH);
-      delay(500);
-      digitalWrite(4,LOW);
       Set_Motor_Currents(0,0);
-
-      Turn_130_Clockwise();
-
-      startStage = 3;
-    break;
-
-    // STEP 3 next state
-    case 3:
+      Turn_90_Clockwise();
+      startStage = 0;
       CurrentState = FOLLOW_LINE;
-    break;
+      break;
+    
+    default:
+      CurrentState = ERROR;
   }
 }
 
@@ -622,7 +608,6 @@ void Calibrate_On_Line(unsigned long Timeout)  {
   unsigned long t0 = millis();
   unsigned long t1 = millis()+1;
   while (t1-t0 <= Timeout) {
-    Serial.println(LeftMotorSpeed);
     IR_Sensor_Status = Scan();
     if (IR_Sensor_Status == ALL_BLACK) {
       Set_Motor_Currents(0,0);
