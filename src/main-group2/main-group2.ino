@@ -20,9 +20,10 @@ Optional:
 
 
 //Including project libraries
-#include "include/ultrasonic-sensor-group2.h" 
+#include "include/ultrasonic-sensor-group2.h"
 #include "include/ir-sensor-group2.h"
 #include "include/motor-group2.h"
+#include "include/rgb-sensor-group2.h"
 
 //Including online libraries
 #include <Servo.h>
