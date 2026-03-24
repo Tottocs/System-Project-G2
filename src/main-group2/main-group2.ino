@@ -24,7 +24,7 @@ Optional:
 #include "include/ir-sensor-group2.h"
 #include "include/motor-group2.h"
 
-//Including online libraries 
+//Including online libraries
 #include <Servo.h>
 
 //UART only needed for debugging and or comunication between chips. Will slow the arduino computation
@@ -42,7 +42,7 @@ Optional:
 #define MOT_B1_PIN 9
 #define MOT_B2_PIN 10
 
-#define BUZZ_PIN 9
+#define BUZZ_PIN 3
 
 //Peripheral 
 #define BUTTON 7 // Change
@@ -89,8 +89,8 @@ int IR_Sensor_Pins[] = {A5,A4,A3};
 //Speeds
 #define NOMINAL_SPD 120
 #define STARTING_SPD 80
-#define DROPOFF_SPD 40
-#define OBSTACLE_SPD 40
+#define DROPOFF_SPD 80
+#define OBSTACLE_SPD 80
 #define LINE_CAL_SPD 100
 #define TURN_SPD 100
 #define HOME_SPD 80
@@ -102,13 +102,12 @@ int IR_Sensor_Pins[] = {A5,A4,A3};
 #define ALL_BLACK B111
 #define NO_BLACK B000
 
-#define LM_CORRECTION 100
+#define LM_CORRECTION 100 // Left motor correction
 
 // OBJECTS
 // --------------------------------------
 Servo arm; // Add servo names
 Servo door;
-//Servo scanner;
 
 // VARIABLES
 //---------------------------------------
@@ -179,10 +178,6 @@ void setup() {
   //Servo setup
   door.attach(DOOR_PIN);
 
-  //Setup main motor pins
-  Setup_Main_Motors(MOT_A1_PIN, MOT_A2_PIN, 
-                    MOT_B1_PIN, MOT_B2_PIN);
-
   digitalWrite(RUNNING_LED, HIGH); 
   //Setup up ir sensor pins
   if (!Setup_IR_Sensors(IR_Sensor_Pins, BUTTON, CALIBRATION_LED)) {
@@ -190,16 +185,19 @@ void setup() {
   } 
   digitalWrite(CALIBRATION_LED, LOW);
 
-  /*
+  //Setup main motor pins
+  Setup_Main_Motors(MOT_A1_PIN, MOT_A2_PIN, 
+                    MOT_B1_PIN, MOT_B2_PIN);
+
   Set_Motor_Currents(NOMINAL_SPD, NOMINAL_SPD);
-  delay(DRV_OFF_BLK_DEL);
-  */
+  delay(3000); 
+  
 }
 
 void loop() {
   //Serial.println(CurrentState);
   if (CurrentState != ERROR) { // Testing
-     //CurrentState = DROPOFF;  
+     CurrentState = FOLLOW_LINE;  
   }
   
   IR_Sensor_Status = Scan();
@@ -400,7 +398,7 @@ void Dropoff()
 }
 
 void Pickup() {
-  
+
 }
 
 //STATE 4 go home
@@ -431,11 +429,11 @@ void Home()
   case Turning:
     //Turn right
     Set_Motor_Currents(TURN_SPD*LM_CORRECTION/100,-TURN_SPD);
-    if (IR_Sensor_Status = B001) {
+    if (IR_Sensor_Status == B001) {
       HomeState = Follow_Line;
       if (HomeTurned) {
         Set_Motor_Currents(TURN_SPD*LM_CORRECTION/100,-TURN_SPD);
-        if (IR_Sensor_Status = B001) {
+        if (IR_Sensor_Status == B001) {
           HomeState = End;
         }
       }
