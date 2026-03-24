@@ -98,7 +98,7 @@ int positions[4] = {20, 80, 130, 170};// [0]=pickup, [1-3]=bins
 
 //Speeds
 #define NOMINAL_SPD 120
-#define STARTING_SPD 80
+#define STARTING_SPD 100
 #define DROPOFF_SPD 80
 #define OBSTACLE_SPD 80
 #define LINE_CAL_SPD 100
@@ -327,6 +327,9 @@ void FollowLine()
     Set_Motor_Currents(0,0);
     delay(BLK_CONFIRM_DELAY);
     Calibrate_On_Line(BLK_LINE_TIMEOUT);
+    if (IR_Sensor_Status == ALL_BLACK) {
+      CurrentState = HOME;
+    }
   }
 
   if(ObjectDetected)
@@ -458,12 +461,18 @@ void Pickup() {
 //STATE 4 go home
 void Home()
 {
-  const int Follow_Line = 1;
-  const int Turning = 2;
-  const int End = 3;
+  const int Start_Homing = 1;
+  const int Follow_Line = 2;
+  const int Turning = 3;
+  const int End = 4;
   
   //HomeState = End;
   switch (HomeState) {
+    Set_Motor_Currents(NOMINAL_SPD, NOMINAL_SPD);
+    delay(300);
+    HomeState  = Follow_Line;
+  case Start_Homing:
+    
   
   case Follow_Line:
     Update_Direction(&LeftMotorSpeed, &RightMotorSpeed);
