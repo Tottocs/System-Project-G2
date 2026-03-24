@@ -3,7 +3,7 @@
 #endif
 
 /*
-Authors: Lucy Grierson, Torin Stanton-Andersson
+Authors: Lucy Grierson, Torin Stanton-Andersson, Ben Albeson
 
 [] Ultrasonic Sensor
 [] RGB Sensor
@@ -20,11 +20,12 @@ Optional:
 
 
 //Including project libraries
-#include "include/ultrasonic-sensor-group2.h" 
+#include "include/ultrasonic-sensor-group2.h"
 #include "include/ir-sensor-group2.h"
 #include "include/motor-group2.h"
+#include "include/rgb-sensor-group2.h"
 
-//Including online libraries 
+//Including online libraries
 #include <Servo.h>
 
 //UART only needed for debugging and or comunication between chips. Will slow the arduino computation
@@ -34,23 +35,23 @@ Optional:
 // PINS
 //---------------------------------
 //Servo pins
-#define DOOR_PIN 11
+#define DOOR_PIN 9
 
 //Motor pins
-#define MOT_A1_PIN 5
-#define MOT_A2_PIN 6
-#define MOT_B1_PIN 9
-#define MOT_B2_PIN 10
+#define MOT_A1_PIN 5 // IN2
+#define MOT_A2_PIN 6 // IN1
+#define MOT_B1_PIN 11 // IN3
+#define MOT_B2_PIN 3 // IN4
 
-#define BUZZ_PIN 9
+#define BUZZ_PIN 3
 
 //Peripheral 
-#define BUTTON 7 // Change
+#define BUTTON 7
 
 //Debug LEDs
 #define ERROR_LED 4
 #define CALIBRATION_LED 8
-#define RUNNING_LED 12
+#define RUNNING_LED 13
 
 int IR_Sensor_Pins[] = {A5,A4,A3};
 
@@ -89,8 +90,8 @@ int IR_Sensor_Pins[] = {A5,A4,A3};
 //Speeds
 #define NOMINAL_SPD 120
 #define STARTING_SPD 80
-#define DROPOFF_SPD 40
-#define OBSTACLE_SPD 40
+#define DROPOFF_SPD 80
+#define OBSTACLE_SPD 80
 #define LINE_CAL_SPD 100
 #define TURN_SPD 100
 #define HOME_SPD 80
@@ -102,19 +103,21 @@ int IR_Sensor_Pins[] = {A5,A4,A3};
 #define ALL_BLACK B111
 #define NO_BLACK B000
 
-#define LM_CORRECTION 100
+#define LM_CORRECTION 100 // Left motor correction
 
 // OBJECTS
 // --------------------------------------
 Servo arm; // Add servo names
 Servo door;
-//Servo scanner;
 
 // VARIABLES
 //---------------------------------------
 
 //90 degree turn checker
 bool turned90 = false;
+
+//130 degree turn checker
+bool tunred130 = false;
 
 //180 degree turn checker
 bool turned180 = false;
@@ -134,6 +137,7 @@ volatile int IR_Sensor_Status = B000;
 //pickup and dropoff
 int pickup = 0;
 int dropoff = 0;
+
 //
 int visitedBins = 0;
 
@@ -179,10 +183,6 @@ void setup() {
   //Servo setup
   door.attach(DOOR_PIN);
 
-  //Setup main motor pins
-  Setup_Main_Motors(MOT_A1_PIN, MOT_A2_PIN, 
-                    MOT_B1_PIN, MOT_B2_PIN);
-
   digitalWrite(RUNNING_LED, HIGH); 
   //Setup up ir sensor pins
   if (!Setup_IR_Sensors(IR_Sensor_Pins, BUTTON, CALIBRATION_LED)) {
@@ -190,16 +190,21 @@ void setup() {
   } 
   digitalWrite(CALIBRATION_LED, LOW);
 
-  /*
-  Set_Motor_Currents(NOMINAL_SPD, NOMINAL_SPD);
-  delay(DRV_OFF_BLK_DEL);
-  */
+  //Setup main motor pins
+  Setup_Main_Motors(MOT_A1_PIN, MOT_A2_PIN, 
+                    MOT_B1_PIN, MOT_B2_PIN);
+
+  //Set_Motor_Currents(NOMINAL_SPD, NOMINAL_SPD);
+  //delay(3000); 
+  
 }
 
 void loop() {
   //Serial.println(CurrentState);
+
+  
   if (CurrentState != ERROR) { // Testing
-     //CurrentState = DROPOFF;  
+     CurrentState = HOME;  
   }
   
   IR_Sensor_Status = Scan();
@@ -232,6 +237,7 @@ void loop() {
       CurrentState = ERROR;
   }
   //delay(REFRESH_RATE); //might get rid
+  
 }
 
 // State functions
@@ -284,6 +290,7 @@ void Starting()
   }
 }
 
+
 //STATE 2 line following and pickup
 void FollowLine()
 {
@@ -323,84 +330,69 @@ void Dropoff()
   dropoff = 0;
   switch(dropoff)
   {
-
-    // delay until drop off point is detected
+    // Detect drop-off area and move slightly forward
     case 0:
-
-      if((IR_Sensor_Status == ALL_BLACK) && (DistanceRight > MIN_DIST && DistanceRight < MAX_DIST))
+      if((IR_Sensor_Status == ALL_BLACK) && 
+         (DistanceRight > MIN_DIST && DistanceRight < MAX_DIST))
       {
-        Set_Motor_Currents(DROPOFF_SPD,DROPOFF_SPD);
+        Set_Motor_Currents(DROPOFF_SPD, DROPOFF_SPD);
         delay(DROPOFF_DELAY);
+
+        Set_Motor_Currents(0, 0);
         dropoff = 1;
       }
-
       break;
 
-    //reverse turning
+    // Turn so the back faces the bin
     case 1:
-
       Turn_90_Anti_Clockwise();
       dropoff = 2;
-
       break;
 
-    //reverse until 5cm away
+    // Reverse until rear sensor detects bin
     case 2:
-
       Set_Motor_Currents(-NOMINAL_SPD, -NOMINAL_SPD);
 
-      if(DistanceBack <= DIST_TO_DROPOFF) //change DIST_TO_DROPOFF this for distance
+      if (DistanceBack <= DIST_TO_DROPOFF)  // bin detected
       {
-        Set_Motor_Currents(0,0);
+        Set_Motor_Currents(0, 0);
         dropoff = 3;
 
       }
-
       break;
 
-    //drop objects
+    // Drop objects
     case 3:
-      //DropOffObject();
-      //add dropoff code here or call helper ^
-    
-    
+      setDropoff(1);   // OPEN DOOR
+      delay(500);      // allow servo to move
       dropoff = 4;
-      
       break;
 
-    //move forward
+    // Move forward away from bin
     case 4:
-
-      Set_Motor_Currents(NOMINAL_SPD,NOMINAL_SPD);
+      Set_Motor_Currents(NOMINAL_SPD, NOMINAL_SPD);
       delay(300);
-
       dropoff = 5;
-
       break;
 
-    //go back to line following
+    // Close door + return to line following
     case 5:
+      setDropoff(0);   // CLOSE DOOR
 
-      Update_Direction(&LeftMotorSpeed,&RightMotorSpeed);
-      Set_Motor_Currents(LeftMotorSpeed,RightMotorSpeed);
+      Update_Direction(&LeftMotorSpeed, &RightMotorSpeed);
+      Set_Motor_Currents(LeftMotorSpeed, RightMotorSpeed);
 
       if(IR_Sensor_Status != NO_BLACK)
       {
         dropoff = 0;
-        visitedBins++;
-
-        if(visitedBins >= 3)
-        {
-          CurrentState = HOME;
-        }
+        CurrentState = LINE_FOLLOWING;
       }
-
-    break;
+      break;
   }
 }
 
 void Pickup() {
-  
+
 }
 
 //STATE 4 go home
@@ -431,11 +423,11 @@ void Home()
   case Turning:
     //Turn right
     Set_Motor_Currents(TURN_SPD*LM_CORRECTION/100,-TURN_SPD);
-    if (IR_Sensor_Status = B001) {
+    if (IR_Sensor_Status == B001) {
       HomeState = Follow_Line;
       if (HomeTurned) {
         Set_Motor_Currents(TURN_SPD*LM_CORRECTION/100,-TURN_SPD);
-        if (IR_Sensor_Status = B001) {
+        if (IR_Sensor_Status == B001) {
           HomeState = End;
         }
       }
