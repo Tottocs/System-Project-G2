@@ -42,9 +42,9 @@ Optional:
 #define MOT_A2_PIN 6 // IN1
 #define MOT_B1_PIN 11 // IN3
 #define MOT_B2_PIN 3 // IN4
-
+#define CR_STATE_PIN 12
 #define BUZZ_PIN 3
-
+#define MAGNET_PIN A0
 //Peripheral 
 #define BUTTON 7
 
@@ -54,10 +54,13 @@ Optional:
 #define RUNNING_LED 13
 
 int IR_Sensor_Pins[] = {A5,A4,A3};
+int positions[4] = {20, 80, 130, 170};// [0]=pickup, [1-3]=bins
+#define CRANE_SERVO_PIN 10 // change to free pin
 
 // CONSTANTS
 //------------------------------------
-
+#define MAGNET_ON 1023
+#define MAGNET_OFF 0
 //MAX and MIN distances for detectable object (cm)
 #define MIN_DIST 1 //Needs to be changed
 #define MAX_DIST 20 //Needs to be changed
@@ -73,6 +76,8 @@ int IR_Sensor_Pins[] = {A5,A4,A3};
 #define OBSTACLE_DELAY 2000
 #define BLK_CONFIRM_DELAY 50
 #define TURN_DELAY 700
+#define CRANE_MOVE_DELAY 1000
+#define MAGNET_MOVE_DELAY 1000
 
 //Timout
 #define BLK_LINE_TIMEOUT 500UL 
@@ -107,8 +112,8 @@ int IR_Sensor_Pins[] = {A5,A4,A3};
 
 // OBJECTS
 // --------------------------------------
-Servo arm; // Add servo names
 Servo door;
+Servo CraneServo;
 
 // VARIABLES
 //---------------------------------------
@@ -146,6 +151,14 @@ int dropOff = 0;
 
 int ObjectDetected = 0;
 
+int GetBinFromColor(detectDominantColor()) { //placeholder values
+  switch(ObjectColor) {
+    case R:   return 1; // bin 1
+    case G: return 2; // bin 2
+    case B:  return 3; // bin 3
+    default:    return 1; // default bin (safe fallback)
+  }
+}
 
 //states
 enum RobotState {
@@ -182,7 +195,10 @@ void setup() {
 
   //Servo setup
   door.attach(DOOR_PIN);
+  CraneServo.attach(CRANE_SERVO_PIN);
+  moveToPosition(0); // default pos
 
+  pinMode(CR_STATE_PIN, OUTPUT);
   digitalWrite(RUNNING_LED, HIGH); 
   //Setup up ir sensor pins
   if (!Setup_IR_Sensors(IR_Sensor_Pins, BUTTON, CALIBRATION_LED)) {
@@ -196,7 +212,8 @@ void setup() {
 
   //Set_Motor_Currents(NOMINAL_SPD, NOMINAL_SPD);
   //delay(3000); 
-  
+
+
 }
 
 void loop() {
@@ -393,6 +410,45 @@ void Dropoff()
 
 void Pickup() {
 
+  Set_Motor_Currents(0,0); // stop robot
+
+  //go to pickup position
+  moveToPosition(0);
+  delay(CRANE_MOVE_DELAY);
+  
+  //input detect colour
+  
+  digitalWrite(CR_STATE_PIN, HIGH);//lower magnet
+  delay(MAGNET_MOVE_DELAY);
+
+  //activate electromagnet
+  analogWrite(MAGNET_PIN, MAGNET_ON);
+  delay(500);
+
+  //lift object
+  digitalWrite(CR_STATE_PIN, LOW);
+  delay(MAGNET_MOVE_DELAY);
+
+  //choose bin
+  int binIndex = GetBinFromColor(detectedColor);
+
+  //rotate to bin
+  moveToPosition(binIndex);
+  delay(800);
+
+  //release object
+  analogWrite(MAGNET_PIN, MAGNET_OFF);
+  delay(500);
+
+  //return to pickup position
+  moveToPosition(0);
+
+  pickup++;
+  ObjectDetected = 0;
+
+  CurrentState = FOLLOW_LINE;
+
+
 }
 
 //STATE 4 go home
@@ -558,4 +614,23 @@ void Calibrate_On_Line(unsigned long Timeout)  {
     Set_Motor_Currents(-LINE_CAL_SPD,-LINE_CAL_SPD);
   }
   Set_Motor_Currents(0,0);  
+}
+
+void moveToPosition(int posIndex) {
+  if (posIndex < 0 || posIndex > 3) return;
+
+  int target = positions[posIndex];
+  int currentAngle = CraneServo.read();
+
+  if (currentAngle < target) {
+    for (int angle = currentAngle; angle <= target; angle++) {
+      CraneServo.write(angle);
+      delay(10);
+    }
+  } else {
+    for (int angle = currentAngle; angle >= target; angle--) {
+      CraneServo.write(angle);
+      delay(10);
+    }
+  }
 }
