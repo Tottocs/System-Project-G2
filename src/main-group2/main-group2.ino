@@ -1,16 +1,16 @@
 #ifndef FIRMWARE_VERSION
-#define FIRMWARE_VERSION "v.0.5" //Implementation of line following
+#define FIRMWARE_VERSION "v.0.6" //Implementation of line following
 #endif
 
 /*
 Authors: Lucy Grierson, Torin Stanton-Andersson, Ben Albeson
 
 [] Ultrasonic Sensor
-[] RGB Sensor
+[x] RGB Sensor
 [x] Motors
-[] Servos (Which ones)
+[x] Servos (Which ones)
 [x] IR sensors
-[] Status LEDs
+[x] Status LEDs
 [x] Buzzer
 
 Optional:
@@ -45,7 +45,7 @@ Optional:
 #define MOT_B2_PIN 3 // IN4
 #define CR_STATE_PIN 12
 #define BUZZ_PIN 3
-#define MAGNET_PIN A0
+#define MAGNET_PIN A2
 //Peripheral 
 #define BUTTON 7
 
@@ -119,6 +119,8 @@ int positions[4] = {20, 80, 130, 170};// [0]=pickup, [1-3]=bins
 Servo door;
 Servo CraneServo;
 
+RgbSensor rgbSensor;
+
 // VARIABLES
 //---------------------------------------
 
@@ -155,11 +157,17 @@ int dropOff = 0;
 
 int ObjectDetected = 0;
 
-int GetBinFromColor(detectDominantColor()) { //placeholder values
-  switch(ObjectColor) {
+char ObjectColour = 0;
+
+char GetBinFromColor() { 
+  ObjectColour = rgbSensor.detectDominantColor();
+  const char R = 1;
+  const char G = 2;
+  const char B = 3;
+  switch(ObjectColour) {
     case R:   return 1; // bin 1
-    case G: return 2; // bin 2
-    case B:  return 3; // bin 3
+    case G:   return 2; // bin 2
+    case B:   return 3; // bin 3
     default:    return 1; // default bin (safe fallback)
   }
 }
@@ -196,14 +204,16 @@ void setup() {
   pinMode(ERROR_LED, OUTPUT);
   pinMode(CALIBRATION_LED, OUTPUT);
   pinMode(RUNNING_LED, OUTPUT);
-
+  digitalWrite(RUNNING_LED, HIGH);
+  
   //Servo setup
   door.attach(DOOR_PIN);
   CraneServo.attach(CRANE_SERVO_PIN);
   moveToPosition(0); // default pos
 
+  //Crane
   pinMode(CR_STATE_PIN, OUTPUT);
-  digitalWrite(RUNNING_LED, HIGH); 
+   
   //Setup up ir sensor pins
   if (!Setup_IR_Sensors(IR_Sensor_Pins, BUTTON, CALIBRATION_LED)) {
     CurrentState = ERROR;
@@ -214,6 +224,10 @@ void setup() {
   Setup_Main_Motors(MOT_A1_PIN, MOT_A2_PIN, 
                     MOT_B1_PIN, MOT_B2_PIN);
 
+  //Setup rgb sensor
+  if (!rgbSensor.begin()) {
+    CurrentState = ERROR;
+  }
   //Set_Motor_Currents(NOMINAL_SPD, NOMINAL_SPD);
   //delay(3000); 
 
@@ -225,7 +239,7 @@ void loop() {
 
   
   if (CurrentState != ERROR) { // Testing
-     CurrentState = HOME;  
+     //CurrentState = STARTING;  
   }
   
   IR_Sensor_Status = Scan();
@@ -434,7 +448,7 @@ void Pickup() {
   delay(MAGNET_MOVE_DELAY);
 
   //choose bin
-  int binIndex = GetBinFromColor(detectedColor);
+  char binIndex = GetBinFromColor();
 
   //rotate to bin
   moveToPosition(binIndex);
@@ -621,7 +635,7 @@ void Calibrate_On_Line(unsigned long Timeout)  {
 }
 
 void moveToPosition(int posIndex) {
-  if (posIndex < 0 || posIndex > 3) return;
+  if (posIndex < 0 || posIndex > N_OBJECTS) return;
 
   int target = positions[posIndex];
   int currentAngle = CraneServo.read();
