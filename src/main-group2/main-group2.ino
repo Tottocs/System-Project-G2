@@ -115,6 +115,9 @@ Servo door;
 //90 degree turn checker
 bool turned90 = false;
 
+//130 degree turn checker
+bool tunred130 = false;
+
 //180 degree turn checker
 bool turned180 = false;
 
@@ -135,6 +138,9 @@ int pickup = 0;
 int dropoff = 0;
 //
 int visitedBins = 0;
+
+//state 1
+int startStage = 0;
 
 //state 3
 int dropOff = 0;
@@ -281,6 +287,7 @@ void Starting()
     break;
   }
 }
+
 
 //STATE 2 line following and pickup
 void FollowLine()
