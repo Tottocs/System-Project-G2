@@ -52,6 +52,9 @@ Optional:
 #define CALIBRATION_LED 8
 #define RUNNING_LED 12
 
+
+int positions[4] = {20, 80, 130, 170};// [0]=pickup (left), [1-3]=bins
+#define CraneServoPin 9 // change to free pin
 int IR_Sensor_Pins[] = {A5,A4,A3};
 
 // CONSTANTS
@@ -108,6 +111,7 @@ int IR_Sensor_Pins[] = {A5,A4,A3};
 // --------------------------------------
 Servo arm; // Add servo names
 Servo door;
+Servo CraneServo;
 //Servo scanner;
 
 // VARIABLES
@@ -162,6 +166,14 @@ int obstacleStage = 0;
 int HomeState = 1;
 bool HomeTurned = false;
 
+int GetBinFromColor(ObjectColor color) {
+  switch(color) {
+    case RED:   return 1; // bin 1
+    case GREEN: return 2; // bin 2
+    case BLUE:  return 3; // bin 3
+    default:    return 1; // default bin (safe fallback)
+  }
+}
 
 void setup() {
   //setup serial
@@ -194,7 +206,11 @@ void setup() {
   Set_Motor_Currents(NOMINAL_SPD, NOMINAL_SPD);
   delay(DRV_OFF_BLK_DEL);
   */
+  CraneServo.attach(CraneServoPin); // CHANGE TO CORRECT PIN
+  moveToPosition(0);  // start at position 1 (index 0)
+
 }
+
 
 void loop() {
   //Serial.println(CurrentState);
@@ -399,9 +415,52 @@ void Dropoff()
   }
 }
 
+
 void Pickup() {
+
+  Set_Motor_Currents(0,0); // stop robot
+
+  //go to pickup position (left side)
+  moveToPosition(0);
+  delay(500);
   
+  //input detect colour
+  ObjectColor detectedColor = DetectColor();
+  Set_Motor_pwm() //lower magnet
+  
+  delay(1000);
+
+  //activate electromagnet
+  //digitalWrite(MAGNET_PIN, HIGH);
+  delay(500);
+
+  //lift object
+  delay(1000);
+
+
+
+  //choose bin
+  int binIndex = GetBinFromColor(detectedColor);
+
+  //rotate to bin
+  moveToPosition(binIndex);
+  delay(800);
+
+  //release object
+  //digitalWrite(MAGNET_PIN, LOW);
+  delay(500);
+
+  //return to pickup position
+  moveToPosition(0);
+
+  pickup++;
+  ObjectDetected = 0;
+
+  CurrentState = FOLLOW_LINE;
 }
+
+
+
 
 //STATE 4 go home
 void Home()
@@ -566,4 +625,23 @@ void Calibrate_On_Line(unsigned long Timeout)  {
     Set_Motor_Currents(-LINE_CAL_SPD,-LINE_CAL_SPD);
   }
   Set_Motor_Currents(0,0);  
+}
+
+void moveToPosition(int posIndex) {
+  if (posIndex < 0 || posIndex > 3) return;
+
+  int target = positions[posIndex];
+  int currentAngle = CraneServo.read();
+
+  if (currentAngle < target) {
+    for (int angle = currentAngle; angle <= target; angle++) {
+      CraneServo.write(angle);
+      delay(10);
+    }
+  } else {
+    for (int angle = currentAngle; angle >= target; angle--) {
+      CraneServo.write(angle);
+      delay(10);
+    }
+  }
 }
