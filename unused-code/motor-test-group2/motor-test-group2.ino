@@ -54,6 +54,5 @@ void spin_and_wait(int pwm_A, int pwm_B, int duration)
 
 void loop()
 {
-
-  spin_and_wait(leftServoSpeed,rightServoSpeed,ONTIME); // sets speed of motors to value entered above for 0.5 sec and keeps repeating
+  set_motor_currents(leftServoSpeed, rightServoSpeed); // sets speed of motors to value entered above for 0.5 sec and keeps repeating
 }
