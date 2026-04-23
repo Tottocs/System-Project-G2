@@ -1,0 +1,72 @@
+
+Meeting Minutes 
+
+Group Name: Recyclotronics 
+Team Number: 2 
+
+Week: 1 
+
+Time: 1000 - 1200
+
+Place: GRID 
+
+Present: Abdal, Torin, Lucy, Aidan, Ben 
+
+Apologies: 
+
+Agenda: 
+    What are the items that are to be covered during the meeting.
+    Discuss further sorting each box and decide  
+    How will sorting work for multiple object at once. 
+    Developing ideas for gripper. 
+    Risk assessment must be done before practical work commences. 
+    Sensor characterisation.  
+    Line following 
+
+Review of previous actions: 
+    Specific reporting of actions from previous meeting.  
+    Person identified as responsible for the action to provide the report 
+
+Main business: 
+    Finalise specific parts of robot’s design 
+
+Action: Discuss and plan out logistics. 
+    Storage of objects 
+    Team finalised plan to store multiple objects at once, complexity concerns raised but agreement if we are unable to realise this idea we will move back to one at a time concept accepted 
+    Multiple compartments on the back of robot with small incline on each basket 
+    Latch door to let the corresponding ball roll out the robot. 
+    Incline to let the objects roll in and out then into boxes 
+    Barrell on back of buggy with four compartments that rotate respective to object needed for deposit. 
+
+Arm of robot 
+    Most complex part technically and logistically  
+    Discussion of how to drop object in correct baskets 
+    Add rubber end onto gripper 
+    Use current to measure if an object is grabbed from the current output a button is an easier less technical solution although problematic if it gets jammed 
+    Simpler arm that lifts object overhead and onto tracks  
+
+Environment 
+    Ensure the objects are in correct colour order for drop off to collaborate with the arm 
+    Cannot have robot on GRID floor due to dark lines between floor tiles potentially causing confusion.  Wooden panel with black electrical tape can be used instead. 
+
+ Object shape  
+    Potentially different size object so they can roll into different buggy bins, spherical. 
+    Obstacle and objects differentiated by whether they are on or off the line. 
+    Small object harder to detect. 
+
+ Other parts of buggy 
+    RGB sensor on side to detect  
+    Accelerometer on buggy to detect if it has fallen over. 
+    Two separate Arduinos to allow for simultaneous line following and colour detection, convolution concerns raised. 
+
+Report 
+    Save developmental drawings and insert into report (appendix?) 
+
+ 
+
+Goals for next session: 
+    Characterise motors – Torin, Aidan and David 
+    Ultrasound sensor – Ben 
+    Completion of risk assessment – Lucy 
+    Line Following – Lucy 
+    Creation of GitHub – Abdal 
